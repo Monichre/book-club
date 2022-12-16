@@ -1,3 +1,5 @@
+import { NewBookClubCurriculumData, NewBookClubData } from '@/pages/profile/[id]';
+import { snakeCaseObjectFields } from '@/utils/functions';
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 
@@ -140,7 +142,7 @@ export const useStore = (props) => {
  */
 export const fetchChannels = async (setState) => {
   try {
-    let { data } = await supabase.from('channels').select('*')
+    let { data } = await supabase.from('book_club_channels').select('*')
     if (setState) setState(data)
     return data
   } catch (error) {
@@ -157,7 +159,13 @@ export const fetchUser = async (userId, setState) => {
   try {
     let { data } = await supabase.from('users').select(`*`).eq('id', userId)
     console.log('data: ', data)
-    let user = data[0]
+
+    let { data: bookClubs } = await supabase
+      .from('book_club_users')
+      .select(`*`)
+      .eq('id', userId)
+    console.log('bookClubs: ', bookClubs)
+    let user = { ...data[0], bookClubs }
     if (setState) setState(user)
     return user
   } catch (error) {
@@ -260,6 +268,62 @@ export const deleteMessage = async (message_id) => {
       .from('messages')
       .delete()
       .match({ id: message_id })
+    return data
+  } catch (error) {
+    console.log('error', error)
+  }
+}
+
+/**
+ * Insert a new channel into the DB
+ * @param {string} slug The channel name
+ * @param {number} user_id The channel creator
+ */
+type BookClubChannelPayload = {
+  name: string
+  ownerId: string
+  bookClubId: string
+}
+
+const createBookClubChannel = async (channel: BookClubChannelPayload) => {
+  let { data } = await supabase
+    .from('book_club_channels')
+    .insert([
+      {
+        ...snakeCaseObjectFields(channel),
+      },
+    ])
+    .select()
+  console.log('data: ', data)
+  return data
+}
+
+const createBookClubCurriculum = async (
+  curriculum: NewBookClubCurriculumData
+) => {}
+
+export const createBookClub = async ({
+  curriculum,
+  club,
+}: {
+  club: NewBookClubData
+}) => {
+  const payload = snakeCaseObjectFields(club)
+  const { ownerId } = club
+  try {
+    let { data } = await supabase
+      .from('book_clubs')
+      .insert([
+        {
+          ...payload,
+        },
+      ])
+      .select()
+
+    const bookClub = data[0]
+    const { name, id: bookClubId } = bookClub
+    const channel = await createBookClubChannel({ ownerId, name, bookClubId })
+    console.log('channel: ', channel)
     return data
   } catch (error) {
     console.log('error', error)

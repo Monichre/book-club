@@ -35,6 +35,8 @@ class MyDocument extends Document {
         <body>
           <Main />
           <NextScript />
+
+          <script src='https://www.google.com/books/jsapi.js'></script>
         </body>
       </Html>
     )

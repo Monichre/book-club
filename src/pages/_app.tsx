@@ -1,7 +1,7 @@
 import { fetchUser, fetchUserRoles, supabase } from '@/lib/Store';
 import UserContext from '@/lib/UserContext';
 import { GlobalStyle } from '@/styles/GlobalStyles';
-import { Button, createTheme, Link, Navbar, NextUIProvider, Text } from '@nextui-org/react';
+import { Avatar, Button, createTheme, Link, Navbar, NextUIProvider, Text } from '@nextui-org/react';
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { Session, SessionContextProvider } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/router';
@@ -24,6 +24,7 @@ function MyApp({
 
   const [userLoaded, setUserLoaded] = useState(false)
   const [user, setUser] = useState(null)
+  console.log('user: ', user)
   const [session, setSession] = useState(null)
   const [userRoles, setUserRoles] = useState([])
   const router = useRouter()
@@ -55,7 +56,7 @@ function MyApp({
       .then((fetchedUser) => {
         console.log('fetchedUser: ', fetchedUser)
         signIn()
-        router.push('/channels/[id]', '/channels/1')
+        router.push('/profile/[id]', `/profile/${fetchedUser.id}`)
       })
   }, [])
 
@@ -105,16 +106,29 @@ function MyApp({
                 <Navbar.Link href='#'>Pricing</Navbar.Link>
                 <Navbar.Link href='#'>Company</Navbar.Link>
               </Navbar.Content>
-              <Navbar.Content>
-                <Navbar.Link color='inherit' href='#'>
-                  Login
-                </Navbar.Link>
-                <Navbar.Item>
-                  <Button auto flat as={Link} href='#'>
-                    Sign Up
-                  </Button>
-                </Navbar.Item>
-              </Navbar.Content>
+              {user ? (
+                <Navbar.Content>
+                  <Navbar.Item>
+                    <Avatar
+                      size='lg'
+                      src='https://i.pravatar.cc/150?u=a042581f4e25056704b'
+                      color='gradient'
+                      bordered
+                    />
+                  </Navbar.Item>
+                </Navbar.Content>
+              ) : (
+                <Navbar.Content>
+                  <Navbar.Link color='inherit' href='#'>
+                    Login
+                  </Navbar.Link>
+                  <Navbar.Item>
+                    <Button auto flat as={Link} href='#'>
+                      Sign Up
+                    </Button>
+                  </Navbar.Item>
+                </Navbar.Content>
+              )}
             </Navbar>
             <Component {...pageProps} />
           </UserContext.Provider>

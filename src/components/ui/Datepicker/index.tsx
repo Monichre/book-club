@@ -1,23 +1,24 @@
-import { ErrorMessage } from "components/ErrorMessage";
-import React from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
+
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import React from 'react';
+import DatePicker from 'react-datepicker';
 
 export function Datepicker({
-  placeholder = "Select date",
+  placeholder = 'Select date',
   className,
   value,
-  dateFormat = "dd/MM/yyyy",
+  dateFormat = 'dd/MM/yyyy',
   onChange,
   errors = [],
   ...restProps
 }) {
-  const [selectedDate, setSelectedDate] = React.useState(value);
+  const [selectedDate, setSelectedDate] = React.useState(value)
 
   const onDateChange = (value) => {
-    setSelectedDate(value);
-    onChange?.(value.toISOString());
-  };
+    setSelectedDate(value)
+    onChange?.(value.toISOString())
+  }
 
   return (
     <>
@@ -32,27 +33,27 @@ export function Datepicker({
       </div>
       <ErrorMessage errors={errors} />
     </>
-  );
+  )
 }
 
 function DatePickerRange({
   startDate,
   endDate,
-  placeholder = "Select range",
+  placeholder = 'Select range',
   className,
-  dateFormat = "dd/MM/yyyy",
+  dateFormat = 'dd/MM/yyyy',
   onChange,
   errors = [],
   ...restProps
 }) {
-  const [startDateValue, setStartDate] = React.useState(startDate);
-  const [endDateValue, setEndDate] = React.useState(endDate);
+  const [startDateValue, setStartDate] = React.useState(startDate)
+  const [endDateValue, setEndDate] = React.useState(endDate)
 
   const onDateChange = ([start, end]) => {
-    setStartDate(start);
-    setEndDate(end);
-    onChange?.([start.toISOString(), end.toISOString()]);
-  };
+    setStartDate(start)
+    setEndDate(end)
+    onChange?.([start.toISOString(), end.toISOString()])
+  }
 
   return (
     <>
@@ -69,18 +70,18 @@ function DatePickerRange({
       </div>
       <ErrorMessage errors={errors} />
     </>
-  );
+  )
 }
 
-Datepicker.Range = DatePickerRange;
+Datepicker.Range = DatePickerRange
 Datepicker.DateTime = (props) => (
-  <Datepicker dateFormat="dd/MM/yyyy h:mm aa" showTimeSelect {...props} />
-);
+  <Datepicker dateFormat='dd/MM/yyyy h:mm aa' showTimeSelect {...props} />
+)
 Datepicker.Time = (props) => (
   <Datepicker
-    dateFormat="h:mm aa"
+    dateFormat='h:mm aa'
     showTimeSelect
     showTimeSelectOnly
     {...props}
   />
-);
+)
