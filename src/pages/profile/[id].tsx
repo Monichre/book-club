@@ -60,8 +60,8 @@ export const NewBookClubForm = ({
 
     handleBookClubData({ endTime })
   }
-  const handleSchedule = (schedule) => {
-    updateBookClubData({ schedule })
+  const handleSchedule = (days) => {
+    updateBookClubData({ days })
   }
   const updateBookClubData = (data) => {
     handleBookClubData(data)
@@ -202,9 +202,9 @@ export type NewBookClubData = {
   ownerId: string
 }
 
-export type NewBookClubCurriculumData = {
-  bookClubId: string
-  schedule:
+export type BookClubSchedule = {
+  bookClubId?: string
+  days:
     | 'monday'
     | 'tuesday'
     | 'wednesday'
@@ -260,16 +260,16 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   const handleNewBookClub = async () => {
     // const data = await createBookClub()
 
-    const { schedule, startTime, endTime, ...rest } = bookClub
-    const curriculum = {
-      schedule,
+    const { days, startTime, endTime, ...rest } = bookClub
+    const schedule = {
+      days,
       startTime,
       endTime,
     }
     const club = {
       ...rest,
     }
-    const res = await createBookClub({ curriculum, club })
+    const res = await createBookClub({ schedule, club })
     console.log('res: ', res)
   }
 

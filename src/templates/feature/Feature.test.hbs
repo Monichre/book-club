@@ -1,0 +1,14 @@
+import * as React from "react";
+import * as z from 'zod';
+import { rtlRender, screen } from '@/test/test-utils';
+
+import { {{properCase name}} } from '../{{properCase name}}';
+
+test('should render', async () => {
+  
+  await rtlRender(
+    <{{properCase name}} id="{{name}}-default-test" />
+  );
+
+  expect(screen.queryById("{{name}}-default-test")).toBeInTheDocument();
+});

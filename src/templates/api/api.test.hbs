@@ -1,0 +1,65 @@
+/*
+IMPORTANT: WIP
+*/
+import {renderHook} from "@testing-library/react-hooks"
+import { {{pascalCase name}} } from "../"
+
+import { rest } from 'msw';
+import { API_URL } from '@/config';
+
+export const  = [
+  rest.get(`${API_URL}/{{ name }}`, (req, res, ctx) => {
+    try {
+      const user = requireAuth(req);
+
+      const result = db.{{ name }}.findFirst({
+        where: {
+          id: {
+            equals: user.{{ name }}Id,
+          },
+        },
+      });
+
+      return delayedResponse(ctx.json(result));
+    } catch (error: any) {
+      return delayedResponse(
+        ctx.status(400),
+        ctx.json({ message: error?.message || 'Server Error' })
+      );
+    }
+  }),
+
+  rest.get(`${API_URL}/{{ name }}s`, (req, res, ctx) => {
+    try {
+      const result = db.{{ name }}.getAll();
+      return delayedResponse(ctx.json(result));
+    } catch (error: any) {
+      return delayedResponse(
+        ctx.status(400),
+        ctx.json({ message: error?.message || 'Server Error' })
+      );
+    }
+  }),
+
+  rest.patch<TeamBody>(`${API_URL}/{{ name }}/:id`, (req, res, ctx) => {
+    try {
+      const user = requireAuth(req);
+      const data = req.body;
+      requireAdmin(user);
+      const result = db.{{ name }}.update({
+        where: {
+          id: user.{{ name }}Id,
+        },
+        data,
+      });
+      persistDb('{{ name }}');
+
+      return delayedResponse(ctx.json(result));
+    } catch (error: any) {
+      return delayedResponse(
+        ctx.status(400),
+        ctx.json({ message: error?.message || 'Server Error' })
+      );
+    }
+  }),
+];

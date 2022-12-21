@@ -1,4 +1,4 @@
-import { NewBookClubCurriculumData, NewBookClubData } from '@/pages/profile/[id]';
+import { BookClubSchedule, NewBookClubData } from '@/pages/profile/[id]';
 import { snakeCaseObjectFields } from '@/utils/functions';
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
@@ -159,15 +159,17 @@ export const fetchUser = async (userId, setState) => {
   try {
     let { data } = await supabase.from('users').select(`*`).eq('id', userId)
     console.log('data: ', data)
-
-    let { data: bookClubs } = await supabase
-      .from('book_club_users')
-      .select(`*`)
-      .eq('id', userId)
-    console.log('bookClubs: ', bookClubs)
-    let user = { ...data[0], bookClubs }
-    if (setState) setState(user)
-    return user
+    if (data) {
+      let { data: bookClubs } = await supabase
+        .from('book_club_users')
+        .select(`*`)
+        .eq('id', userId)
+      console.log('bookClubs: ', bookClubs)
+      let user = { ...data[0], bookClubs }
+      if (setState) setState(user)
+      return user
+    }
+    return null
   } catch (error) {
     console.log('error', error)
   }
@@ -298,14 +300,24 @@ const createBookClubChannel = async (channel: BookClubChannelPayload) => {
   return data
 }
 
-const createBookClubCurriculum = async (
-  curriculum: NewBookClubCurriculumData
-) => {}
+const createBookClubCurriculum = async (schedule: BookClubSchedule) => {
+  let { data } = await supabase
+    .from('book_club_schedule')
+    .insert([
+      {
+        ...snakeCaseObjectFields(schedule),
+      },
+    ])
+    .select()
+  console.log('data: ', data)
+  return data
+}
 
 export const createBookClub = async ({
-  curriculum,
+  schedule,
   club,
 }: {
+  schedule: BookClubSchedule
   club: NewBookClubData
 }) => {
   const payload = snakeCaseObjectFields(club)
@@ -324,8 +336,41 @@ export const createBookClub = async ({
     const { name, id: bookClubId } = bookClub
     const channel = await createBookClubChannel({ ownerId, name, bookClubId })
     console.log('channel: ', channel)
-    return data
+    const bookClubSchedule = await createBookClubCurriculum(schedule)
+    console.log('bookClubSchedule: ', bookClubSchedule)
+
+    return {
+      bookClub,
+      channel,
+      bookClubSchedule,
+    }
   } catch (error) {
     console.log('error', error)
   }
+}
+
+export const sendJoinAppInvitation = async (invitation) => {
+  let { data } = await supabase
+    .from('app_invitations')
+    .insert([
+      {
+        ...snakeCaseObjectFields(invitation),
+      },
+    ])
+    .select()
+  console.log('data: ', data)
+  return data
+}
+
+export const sendBookClubJoinRequest = async (joinRequest) => {
+  let { data } = await supabase
+    .from('book_club_join_requests')
+    .insert([
+      {
+        ...snakeCaseObjectFields(joinRequest),
+      },
+    ])
+    .select()
+  console.log('data: ', data)
+  return data
 }

@@ -1,0 +1,37 @@
+import { useQuery } from 'react-query';
+
+import { axios } from '@/lib/axios';
+import { ExtractFnReturnType, QueryConfig } from '@/lib/react-query';
+
+export const getAll{{properCase name}}s = async (): Promise<{{properCase name}}[]> => {
+  return await axios.get(`/{{name}}s/v2`);
+};
+
+type QueryFnType = typeof get{{properCase name}};
+
+type Use{{properCase name}}Options = any
+
+export const useGetAll{{properCase name}}s = () => {
+  return useQuery<ExtractFnReturnType<QueryFnType>>({
+    queryKey: ['{{name}}s',],
+    queryFn: () => get{{properCase name}}(),
+  });
+};
+
+
+export const get{{properCase name}}ById = async ({id}: string): Promise<{{properCase name}}> => {
+  return await axios.get(`/{{name}}s/v2/${id}`);
+};
+
+type QueryFnType = typeof get{{properCase name}};
+
+type Use{{properCase name}}Options = {
+  id: string
+}
+
+export const useGet{{properCase name}}ById = ({id}: Use{{properCase name}}Options) => {
+  return useQuery<ExtractFnReturnType<QueryFnType>>({
+    queryKey: ['{{name}}', id],
+    queryFn: () => get{{properCase name}}ById({id}),
+  });
+};

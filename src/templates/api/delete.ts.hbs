@@ -1,0 +1,53 @@
+import { useMutation } from 'react-query';
+import { useNotificationStore } from '@/stores/notifications';
+import { axios } from '@/lib/axios';
+import { MutationConfig, queryClient } from '@/lib/react-query';
+
+
+export type Create{{properCase name}}DTO = {
+  data: {
+
+  };
+};
+
+export const create{{properCase name}} = ({ data }: Create{{properCase name}}DTO): Promise<{{properCase name}}> => {
+  return axios.post('/{{name}}/v2', data);
+};
+
+type UseCreate{{properCase name}}Options = {
+  config?: MutationConfig<typeof create{{properCase name}}>;
+  data?: Create{{properCase name}}DTO['data']
+};
+
+export const useCreate{{properCase name}} = ({ config, data }: UseCreate{{properCase name}}Options) => {
+  const { addNotification } = useNotificationStore();
+
+  return useMutation({
+    onMutate: async (new{{properCase name}}) => {
+      await queryClient.cancelQueries(['{{name}}']);
+
+      const previous{{properCase name}}s = queryClient.getQueryData<{{properCase name}}[]>(['{{name}}']);
+
+      queryClient.setQueryData(
+        ['{{name}}'],
+        [...(previous{{properCase name}}s || []), new{{properCase name}}.data]
+      );
+
+      return { previous{{properCase name}}s };
+    },
+    onError: (_, __, context: any) => {
+      if (context?.previous{{properCase name}}s) {
+        queryClient.setQueryData(['{{name}}'], context.previous{{properCase name}}s);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['{{name}}']);
+      addNotification({
+        type: 'success',
+        title: '{{properCase name}} Created',
+      });
+    },
+    ...config,
+    mutationFn: create{{properCase name}},
+  });
+};

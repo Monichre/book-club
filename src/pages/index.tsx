@@ -1,16 +1,30 @@
 import Footer from '@/components/Footer';
 import { Card, Container } from '@nextui-org/react';
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSessionContext, useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { Auth, ThemeSupa } from '@supabase/auth-ui-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 const Home: any = () => {
-  const session = useSession()
-  const supabase = useSupabaseClient()
+  const session = useSessionContext()
+  console.log('session: ', session)
+  const user = useUser()
 
+  const supabase = useSupabaseClient()
+  let router = useRouter()
+
+  useEffect(() => {
+    if (user) {
+      router.push(`/profile/${user.id}`)
+    }
+  }, [user])
+
+  if (user) {
+  }
   return (
     <Container fluid>
-      {!session ? (
+      {!user ? (
         <Card css={{ w: '50%', h: '100px', margin: '200px auto 0' }}>
           <Card.Body css={{ p: 0 }}>
             <Auth
