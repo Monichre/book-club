@@ -1,9 +1,10 @@
 import TrashIcon from '@//components/TrashIcon';
 import { deleteMessage } from '@//lib/Store';
-import UserContext from '@//lib/UserContext';
+import UserContext from '@/features/auth/UserContext';
 import { useContext } from 'react';
 
 const Message = ({ message }) => {
+  console.log('message: ', message)
   const { user, userRoles } = useContext(UserContext)
 
   return (

@@ -24,15 +24,5 @@ module.exports = {
       path: 'src/components/{{properCase name}}/{{properCase name}}.style.tsx',
       templateFile: './src/templates/component/Component.style.hbs',
     },
-    {
-      type: 'add',
-      path: 'src/components/{{properCase name}}/{{properCase name}}.css',
-      templateFile: './src/templates/component/Component.css.hbs',
-    },
-    {
-      type: 'add',
-      path: 'src/components/{{properCase name}}/__tests__/{{properCase name}}.test.tsx',
-      templateFile: './src/templates/component/Component.test.hbs',
-    },
   ],
 }

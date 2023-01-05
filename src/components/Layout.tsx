@@ -1,8 +1,8 @@
 import TrashIcon from '@/components/TrashIcon';
 import { Button, Column, Img, Input, Line, List, Row, Stack, Text } from '@/components/ui';
 import Sidebar from '@/components/ui/Sidebar/Sidebar';
+import UserContext from '@/features/auth/UserContext';
 import { addChannel, deleteChannel } from '@/lib/Store';
-import UserContext from '@/lib/UserContext';
 import Link from 'next/link';
 import { useContext } from 'react';
 

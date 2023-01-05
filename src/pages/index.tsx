@@ -1,30 +1,46 @@
 import Footer from '@/components/Footer';
 import { Card, Container } from '@nextui-org/react';
-import { useSessionContext, useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
+import { useSessionContext, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Auth, ThemeSupa } from '@supabase/auth-ui-react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 const Home: any = () => {
-  const session = useSessionContext()
+  const { isLoading, session, error } = useSessionContext()
+  console.log('isLoading: ', isLoading)
+  console.log('error: ', error)
+
   console.log('session: ', session)
-  const user = useUser()
+
+  // const getUser = async () => {
+  //   const {
+  //     data: { user: maybe },
+  //   } = await supabase.auth.getUser()
+  //   console.log('maybe: ', maybe)
+  // }
 
   const supabase = useSupabaseClient()
   let router = useRouter()
 
-  useEffect(() => {
-    if (user) {
-      router.push(`/profile/${user.id}`)
-    }
-  }, [user])
+  // useEffect(() => {
+  //   getUser()
+  // }, [])
 
-  if (user) {
-  }
-  return (
-    <Container fluid>
-      {!user ? (
+  useEffect(() => {
+    if (session) {
+      const { user } = session
+      console.log('user: ', user)
+      router.push(`/profile/${user?.id}`)
+    }
+  }, [session])
+
+  // if(session && user) {
+
+  // }
+
+  if (!session) {
+    return (
+      <Container fluid>
         <Card css={{ w: '50%', h: '100px', margin: '200px auto 0' }}>
           <Card.Body css={{ p: 0 }}>
             <Auth
@@ -41,21 +57,11 @@ const Home: any = () => {
             />
           </Card.Body>
         </Card>
-      ) : (
-        <>
-          <Link
-            href={{
-              pathname: '/account',
-            }}
-          >
-            Account
-          </Link>
-        </>
-      )}
-
-      <Footer />
-    </Container>
-  )
+        <Footer />
+      </Container>
+    )
+  }
+  return <div></div>
 }
 
 export default Home

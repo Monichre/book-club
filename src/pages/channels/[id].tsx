@@ -1,7 +1,7 @@
 import Layout from '@/components/Layout';
 import { Button, Column, Img, Row, Stack, Text } from '@/components/ui';
+import UserContext from '@/features/auth/UserContext';
 import { useStore } from '@/lib/Store';
-import UserContext from '@/lib/UserContext';
 import { useRouter } from 'next/router';
 import { useContext, useRef } from 'react';
 

@@ -1,7 +1,7 @@
 import { BookClubSchedule, NewBookClubData } from '@/pages/profile/[id]';
 import { snakeCaseObjectFields } from '@/utils/functions';
 import { createClient } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -11,11 +11,13 @@ export const supabase = createClient(
 /**
  * @param {number} channelId the currently selected Channel
  */
-export const useStore = (props) => {
+export const useStore = (props: { channelId: any }) => {
   const [channels, setChannels] = useState([])
   const [messages, setMessages] = useState([])
+
   const [users] = useState(new Map())
   const [newMessage, handleNewMessage] = useState(null)
+
   const [newChannel, handleNewChannel] = useState(null)
   const [newOrUpdatedUser, handleNewOrUpdatedUser] = useState(null)
   const [deletedChannel, handleDeletedChannel] = useState(null)
@@ -24,7 +26,7 @@ export const useStore = (props) => {
   // Load initial data and set up listeners
   useEffect(() => {
     // Get Channels
-    fetchChannels(setChannels)
+    // fetchChannels(setChannels)
     // Listen for new and deleted messages
     const messageListener = supabase
       .channel('public:messages')
@@ -73,10 +75,15 @@ export const useStore = (props) => {
   // Update when the route changes
   useEffect(() => {
     if (props?.channelId > 0) {
-      fetchMessages(props.channelId, (messages) => {
-        messages.forEach((x) => users.set(x.user_id, x.author))
-        setMessages(messages)
-      })
+      fetchMessages(
+        props.channelId,
+        (messages: any[] | ((prevState: never[]) => never[])) => {
+          messages.forEach((x: { user_id: any; author: any }) =>
+            users.set(x.user_id, x.author)
+          )
+          setMessages(messages)
+        }
+      )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.channelId])
@@ -87,7 +94,9 @@ export const useStore = (props) => {
       const handleAsync = async () => {
         let authorId = newMessage.user_id
         if (!users.get(authorId))
-          await fetchUser(authorId, (user) => handleNewOrUpdatedUser(user))
+          await fetchUser(authorId, (user: SetStateAction<null>) =>
+            handleNewOrUpdatedUser(user)
+          )
         setMessages(messages.concat(newMessage))
       }
       handleAsync()
@@ -140,7 +149,10 @@ export const useStore = (props) => {
  * Fetch all channels
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
-export const fetchChannels = async (setState) => {
+export const fetchChannels = async (setState: {
+  (value: SetStateAction<never[]>): void
+  (arg0: any[] | null): void
+}) => {
   try {
     let { data } = await supabase.from('book_club_channels').select('*')
     if (setState) setState(data)
@@ -155,31 +167,77 @@ export const fetchChannels = async (setState) => {
  * @param {number} userId
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
-export const fetchUser = async (userId, setState) => {
+export const fetchUsersBookClubs = async (userId: any) => {
   try {
-    let { data } = await supabase.from('users').select(`*`).eq('id', userId)
-    console.log('data: ', data)
-    if (data) {
-      let { data: bookClubs } = await supabase
-        .from('book_club_users')
-        .select(`*`)
-        .eq('id', userId)
-      console.log('bookClubs: ', bookClubs)
-      let user = { ...data[0], bookClubs }
-      if (setState) setState(user)
-      return user
-    }
-    return null
+    let { data: bookClubs } = await supabase
+      .from('book_club_users')
+      .select(`*`)
+      .eq('id', userId)
+    console.log('bookClubs: ', bookClubs)
+
+    return { bookClubs }
   } catch (error) {
     console.log('error', error)
   }
+}
+
+export const fetchUsersFriends = async (userId) => {
+  let { data: friends } = await supabase
+    .from('friends')
+    .select(
+      `*
+   
+    `
+    )
+    .or(`invitee_id.eq.${userId},invitor_id.eq.${userId}`)
+  return { friends }
+}
+
+export const fetchUser = async ({
+  userId = null,
+  email = null,
+  search = true,
+}: any) => {
+  console.log('email: ', email)
+  const column = userId ? 'id' : 'email'
+  const value = userId ? userId : email
+  const select = search ? `*,book_clubs(*)` : `*`
+  let { data } = await supabase.from('users').select(select).eq(column, value)
+  console.log('data: ', data)
+  const [user] = data || [null]
+  console.log('user: ', user)
+
+  return user
+}
+export const searchUsers = async (args) => {
+  console.log('args: ', args)
+  let { data } = await supabase
+    .from('users')
+    .select('*')
+    .or(`name.eq.${args},email.eq.${args}`)
+
+  console.log('data: ', data)
+
+  return data
+}
+
+export const fetchUsers = async () => {
+  let { data: users } = await supabase.from('users').select(
+    `*
+    `
+  )
+  console.log('users: ', users)
+
+  return users
 }
 
 /**
  * Fetch all roles for the current user
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
-export const fetchUserRoles = async (setState) => {
+export const fetchUserRoles = async (
+  setState: (arg0: any[] | null) => void
+) => {
   try {
     let { data } = await supabase.from('user_roles').select(`*`)
     console.log('data: ', data)
@@ -195,7 +253,10 @@ export const fetchUserRoles = async (setState) => {
  * @param {number} channelId
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
-export const fetchMessages = async (channelId, setState) => {
+export const fetchMessages = async (
+  channelId: any,
+  setState: { (messages: any): void; (arg0: any[] | null): void }
+) => {
   try {
     let { data } = await supabase
       .from('messages')
@@ -214,7 +275,7 @@ export const fetchMessages = async (channelId, setState) => {
  * @param {string} slug The channel name
  * @param {number} user_id The channel creator
  */
-export const addChannel = async (slug, user_id) => {
+export const addChannel = async (slug: any, user_id: any) => {
   try {
     let { data } = await supabase
       .from('channels')
@@ -232,7 +293,11 @@ export const addChannel = async (slug, user_id) => {
  * @param {number} channel_id
  * @param {number} user_id The author
  */
-export const addMessage = async (message, channel_id, user_id) => {
+export const addMessage = async (
+  message: any,
+  channel_id: any,
+  user_id: any
+) => {
   try {
     let { data } = await supabase
       .from('messages')
@@ -248,7 +313,7 @@ export const addMessage = async (message, channel_id, user_id) => {
  * Delete a channel from the DB
  * @param {number} channel_id
  */
-export const deleteChannel = async (channel_id) => {
+export const deleteChannel = async (channel_id: any) => {
   try {
     let { data } = await supabase
       .from('channels')
@@ -264,7 +329,7 @@ export const deleteChannel = async (channel_id) => {
  * Delete a message from the DB
  * @param {number} message_id
  */
-export const deleteMessage = async (message_id) => {
+export const deleteMessage = async (message_id: any) => {
   try {
     let { data } = await supabase
       .from('messages')
@@ -349,7 +414,25 @@ export const createBookClub = async ({
   }
 }
 
-export const sendJoinAppInvitation = async (invitation) => {
+export const sendFriendRequest = async ({ requestorId, inviteeId }) => {
+  console.log('inviteeId: ', inviteeId)
+  console.log('requestorId: ', requestorId)
+  const args = snakeCaseObjectFields({ requestorId, inviteeId })
+  console.log('args: ', args)
+  let { data: friendRequest } = await supabase.from('friend_requests').insert([
+    {
+      ...snakeCaseObjectFields({ requestorId, inviteeId }),
+    },
+  ]).select(`*, 
+  from: requestor_id(*),
+  to: invitee_id(*)
+  `)
+
+  console.log('friendRequest: ', friendRequest)
+  return friendRequest
+}
+
+export const sendJoinAppInvitation = async (invitation: any) => {
   let { data } = await supabase
     .from('app_invitations')
     .insert([
@@ -362,7 +445,7 @@ export const sendJoinAppInvitation = async (invitation) => {
   return data
 }
 
-export const sendBookClubJoinRequest = async (joinRequest) => {
+export const sendBookClubJoinRequest = async (joinRequest: any) => {
   let { data } = await supabase
     .from('book_club_join_requests')
     .insert([
