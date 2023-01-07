@@ -1,7 +1,9 @@
 import UserContext from '@/features/auth/UserContext';
+import { getUsersFriends } from '@/lib/Store';
+import { Avatar } from '@nextui-org/react';
 import * as React from 'react';
 
-import { FriendsListWrapper, ListElement } from './FriendsList.style';
+import { FriendsListWrapper } from './FriendsList.style';
 
 export type FriendsListProps = {}
 
@@ -17,15 +19,18 @@ export const FriendsList: React.FunctionComponent<
   //   )
   // }, [friends, currentUser])
 
-  // React.useEffect(() => {
-  //   if (currentUser && (!friends || !friends?.length)) {
-  //     getFriends()
-  //   }
-  // }, [currentUser, friends])
+  React.useEffect(() => {
+    if (currentUser) {
+      const res = getUsersFriends(currentUser.id).then((res) => {
+        console.log('res: ', res)
+        setFriends(res)
+      })
+    }
+  }, [currentUser])
 
   return (
     <FriendsListWrapper>
-      <ListElement>
+      <Avatar.Group count={friends?.length}>
         {friends?.length &&
           friends.map(
             (friend: {
@@ -41,9 +46,17 @@ export const FriendsList: React.FunctionComponent<
                 | React.ReactPortal
                 | null
                 | undefined
-            }) => <li>{friend.name}</li>
+            }) => (
+              <Avatar
+                key={friend.id}
+                size='lg'
+                pointer
+                src={friend.avatar_url}
+                stacked
+              />
+            )
           )}
-      </ListElement>
+      </Avatar.Group>
     </FriendsListWrapper>
   )
 }

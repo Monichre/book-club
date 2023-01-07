@@ -157,9 +157,7 @@ export const fetchChannels = async (setState: {
     let { data } = await supabase.from('book_club_channels').select('*')
     if (setState) setState(data)
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -173,12 +171,9 @@ export const fetchUsersBookClubs = async (userId: any) => {
       .from('book_club_users')
       .select(`*`)
       .eq('id', userId)
-    console.log('bookClubs: ', bookClubs)
 
     return { bookClubs }
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 export const fetchUsersFriends = async (userId) => {
@@ -193,30 +188,21 @@ export const fetchUsersFriends = async (userId) => {
   return { friends }
 }
 
-export const fetchUser = async ({
-  userId = null,
-  email = null,
-  search = true,
-}: any) => {
-  console.log('email: ', email)
-  const column = userId ? 'id' : 'email'
-  const value = userId ? userId : email
-  const select = search ? `*,book_clubs(*)` : `*`
-  let { data } = await supabase.from('users').select(select).eq(column, value)
-  console.log('data: ', data)
+export const fetchUser = async ({ userId = null }: any) => {
+  let { data } = await supabase
+    .from('users')
+    .select(`*, book_clubs(*)`)
+    .eq('id', userId)
+
   const [user] = data || [null]
-  console.log('user: ', user)
 
   return user
 }
 export const searchUsers = async (args) => {
-  console.log('args: ', args)
   let { data } = await supabase
     .from('users')
     .select('*')
     .or(`name.eq.${args},email.eq.${args}`)
-
-  console.log('data: ', data)
 
   return data
 }
@@ -226,7 +212,6 @@ export const fetchUsers = async () => {
     `*
     `
   )
-  console.log('users: ', users)
 
   return users
 }
@@ -240,12 +225,10 @@ export const fetchUserRoles = async (
 ) => {
   try {
     let { data } = await supabase.from('user_roles').select(`*`)
-    console.log('data: ', data)
+
     if (setState) setState(data)
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -265,9 +248,7 @@ export const fetchMessages = async (
       .order('inserted_at', true)
     if (setState) setState(data)
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -282,9 +263,7 @@ export const addChannel = async (slug: any, user_id: any) => {
       .insert([{ slug, created_by: user_id }])
       .select()
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -304,9 +283,7 @@ export const addMessage = async (
       .insert([{ message, channel_id, user_id }])
       .select()
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -320,9 +297,7 @@ export const deleteChannel = async (channel_id: any) => {
       .delete()
       .match({ id: channel_id })
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -336,9 +311,7 @@ export const deleteMessage = async (message_id: any) => {
       .delete()
       .match({ id: message_id })
     return data
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 /**
@@ -361,7 +334,7 @@ const createBookClubChannel = async (channel: BookClubChannelPayload) => {
       },
     ])
     .select()
-  console.log('data: ', data)
+
   return data
 }
 
@@ -374,7 +347,7 @@ const createBookClubCurriculum = async (schedule: BookClubSchedule) => {
       },
     ])
     .select()
-  console.log('data: ', data)
+
   return data
 }
 
@@ -400,25 +373,20 @@ export const createBookClub = async ({
     const bookClub = data[0]
     const { name, id: bookClubId } = bookClub
     const channel = await createBookClubChannel({ ownerId, name, bookClubId })
-    console.log('channel: ', channel)
+
     const bookClubSchedule = await createBookClubCurriculum(schedule)
-    console.log('bookClubSchedule: ', bookClubSchedule)
 
     return {
       bookClub,
       channel,
       bookClubSchedule,
     }
-  } catch (error) {
-    console.log('error', error)
-  }
+  } catch (error) {}
 }
 
 export const sendFriendRequest = async ({ requestorId, inviteeId }) => {
-  console.log('inviteeId: ', inviteeId)
-  console.log('requestorId: ', requestorId)
   const args = snakeCaseObjectFields({ requestorId, inviteeId })
-  console.log('args: ', args)
+
   let { data: friendRequest } = await supabase.from('friend_requests').insert([
     {
       ...snakeCaseObjectFields({ requestorId, inviteeId }),
@@ -428,8 +396,67 @@ export const sendFriendRequest = async ({ requestorId, inviteeId }) => {
   to: invitee_id(*)
   `)
 
-  console.log('friendRequest: ', friendRequest)
   return friendRequest
+}
+
+export const acceptFriendRequest = async ({ accepted, ...rest }) => {
+  console.log('rest: ', rest)
+  console.log('accepted: ', accepted)
+  let { status } = await supabase
+    .from('friend_requests')
+    .update([
+      {
+        accepted: true,
+      },
+    ])
+    .eq('id', rest.id)
+
+  if (status === 204) {
+    return {
+      accepted: true,
+      ...rest,
+    }
+  }
+
+  return false
+}
+
+export const getFriendRequests = async (invitee_id) => {
+  let { data: friendRequests } = await supabase
+    .from('friend_requests')
+    .select(
+      `*, 
+  from: requestor_id(*)
+  `
+    )
+    .match({
+      invitee_id,
+      accepted: false,
+    })
+
+  // .eq(`invitee_id`, invitee_id)
+
+  return friendRequests
+}
+
+export const getUsersFriends = async (userId) => {
+  let { data: friends } = await supabase
+    .from('friend_requests')
+    .select(
+      `*, 
+    from: requestor_id(*),
+    to: invitee_id(*)
+    `
+    )
+    .or(`invitee_id.eq.${userId},requestor_id.eq.${userId}`)
+    .match({
+      accepted: true,
+    })
+  console.log('friends: ', friends)
+
+  // .eq(`invitee_id`, invitee_id)
+
+  return friends
 }
 
 export const sendJoinAppInvitation = async (invitation: any) => {
@@ -441,7 +468,7 @@ export const sendJoinAppInvitation = async (invitation: any) => {
       },
     ])
     .select()
-  console.log('data: ', data)
+
   return data
 }
 
@@ -454,6 +481,6 @@ export const sendBookClubJoinRequest = async (joinRequest: any) => {
       },
     ])
     .select()
-  console.log('data: ', data)
+
   return data
 }

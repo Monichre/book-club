@@ -1,8 +1,11 @@
+import { FriendRequests } from '@/components/FriendRequests';
 import { SearchResults } from '@/components/SearchResults';
+import { UserAvatar } from '@/components/UserAvatar';
 import UserContext from '@/features/auth/UserContext';
+import { NotificationsContext } from '@/features/notifications/NotificationsContext';
 import { useSearch } from '@/hooks/useSearch';
 import { searchUsers } from '@/lib/Store';
-import { Avatar, Button, Dropdown, Input, Navbar, Navbar as NextUiNav, Text } from '@nextui-org/react';
+import { Badge, Button, Dropdown, Input, Navbar as NextUiNav, Text, Tooltip } from '@nextui-org/react';
 import { useSessionContext, useSupabaseClient } from '@supabase/auth-helpers-react';
 import Link from 'next/link';
 import * as React from 'react';
@@ -39,7 +42,13 @@ export const NavBar: React.FunctionComponent<NavBarProps> = (
   props: NavBarProps
 ) => {
   const { isLoading, session, error } = useSessionContext()
+  console.log('session: ', session)
   const { currentUser } = React.useContext(UserContext)
+  const { notifications, friendRequests, acceptFriendRequest } =
+    React.useContext(NotificationsContext)
+  console.log('friendRequests: ', friendRequests)
+
+  console.log('currentUser: ', currentUser)
   const supabaseClient = useSupabaseClient()
 
   const {
@@ -48,127 +57,97 @@ export const NavBar: React.FunctionComponent<NavBarProps> = (
     currentSearchString,
     handleSearchString,
   } = useSearch(searchUsers)
-  console.log('results: ', results)
-
-  // const getUser = useCallback(async () => {
-  //   if (currentSearchString && (!results || !results.length)) {
-  //     const res = await fetchUser({ email: currentSearchString }, null)
-  //     if (res) {
-  //       setResults(res)
-  //     }
-  //   }
-  // }, [currentSearchString, results])
-
-  console.log({ results })
 
   const handleSignOut = async () => await supabaseClient.auth.signOut()
   return (
-    <>
-      <NextUiNav isBordered variant={'sticky'}>
-        <NextUiNav.Brand>
-          <Text b color='inherit' hideIn='xs'>
-            Book Club
-          </Text>
-        </NextUiNav.Brand>
+    <NextUiNav isBordered variant={'sticky'}>
+      <NextUiNav.Brand>
+        <Text b color='inherit' hideIn='xs'>
+          Book Club
+        </Text>
+      </NextUiNav.Brand>
 
-        {currentUser ? (
-          <NextUiNav.Content>
-            <NextUiNav.Item>
-              <Link href={{ pathname: '/book-clubs/new' }}>
-                Create A Book Club
-              </Link>
-            </NextUiNav.Item>
-
-            <NextUiNav.Item
+      {currentUser && (
+        <NextUiNav.Content>
+          <NextUiNav.Item
+            css={{
+              '@xsMax': {
+                w: '100%',
+                jc: 'center',
+              },
+            }}
+          >
+            <Input
+              clearable
+              onChange={handleSearchString}
+              onKeyPress={handleEnterKeyPress}
+              value={currentSearchString}
+              contentLeft={
+                <SearchIcon fill='var(--nextui-colors-accents6)' size={16} />
+              }
+              contentLeftStyling={false}
               css={{
+                w: '100%',
                 '@xsMax': {
-                  w: '100%',
-                  jc: 'center',
+                  mw: '300px',
+                },
+                '& .nextui-input-content--left': {
+                  h: '100%',
+                  ml: '$4',
+                  dflex: 'center',
                 },
               }}
-            >
-              <Input
-                clearable
-                onChange={handleSearchString}
-                onKeyPress={handleEnterKeyPress}
-                value={currentSearchString}
-                contentLeft={
-                  <SearchIcon fill='var(--nextui-colors-accents6)' size={16} />
-                }
-                contentLeftStyling={false}
-                css={{
-                  w: '100%',
-                  '@xsMax': {
-                    mw: '300px',
-                  },
-                  '& .nextui-input-content--left': {
-                    h: '100%',
-                    ml: '$4',
-                    dflex: 'center',
-                  },
-                }}
-                placeholder='Search...'
-              />
-            </NextUiNav.Item>
+              placeholder='Search...'
+            />
+          </NextUiNav.Item>
 
-            <Dropdown placement='bottom-right'>
-              <Navbar.Item>
-                <Dropdown.Trigger>
-                  <Avatar
-                    bordered
-                    as='button'
-                    color='primary'
-                    size='md'
-                    src='https://i.pravatar.cc/150?u=a042581f4e29026704d'
-                  />
-                </Dropdown.Trigger>
-              </Navbar.Item>
-              <Dropdown.Menu
-                aria-label='User menu actions'
-                color='secondary'
-                onAction={(actionKey) => console.log({ actionKey })}
+          <Dropdown placement='bottom-right'>
+            <Dropdown.Trigger>
+              <Tooltip
+                placement='bottom'
+                trigger='hover'
+                content={<FriendRequests />}
               >
-                <Dropdown.Item key='profile' css={{ height: '$18' }}>
-                  <Text b color='inherit' css={{ d: 'flex' }}>
-                    {currentUser.email}
-                  </Text>
-                </Dropdown.Item>
-                <Dropdown.Item key='settings' withDivider>
-                  My Settings
-                </Dropdown.Item>
-                <Dropdown.Item key='team_settings'>Team Settings</Dropdown.Item>
-                <Dropdown.Item key='analytics' withDivider>
-                  Analytics
-                </Dropdown.Item>
-                <Dropdown.Item key='system'>System</Dropdown.Item>
-                <Dropdown.Item key='configurations'>
-                  Configurations
-                </Dropdown.Item>
-                <Dropdown.Item key='help_and_feedback' withDivider>
-                  Help & Feedback
-                </Dropdown.Item>
-                <Dropdown.Item key='logout' withDivider color='error'>
-                  <Button auto flat onClick={handleSignOut} href='#'>
-                    Sign Out
-                  </Button>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </NextUiNav.Content>
-        ) : (
-          <NextUiNav.Content>
-            {/* <NextUiNav.Link color='inherit' href='#'>
-            Login
-          </NextUiNav.Link>
-          <NextUiNav.Item>
-            <Button auto flat as={Link} href='#'>
-              Sign Up
-            </Button>
-          </NextUiNav.Item> */}
-          </NextUiNav.Content>
-        )}
-      </NextUiNav>
+                <NextUiNav.Item>
+                  <Badge
+                    size='lg'
+                    content={friendRequests?.length}
+                    bordered
+                    color='secondary'
+                    placement='top-left'
+                  >
+                    <UserAvatar {...currentUser} />
+                  </Badge>
+                </NextUiNav.Item>
+              </Tooltip>
+            </Dropdown.Trigger>
+            <Dropdown.Menu
+              aria-label='User menu actions'
+              color='secondary'
+              onAction={(actionKey) => console.log({ actionKey })}
+            >
+              <Dropdown.Item key='create-book-club' withDivider color='error'>
+                <Link href={{ pathname: '/book-clubs/new' }}>
+                  Create A Book Club
+                </Link>
+              </Dropdown.Item>
+
+              <Dropdown.Item key='settings' withDivider>
+                <Link href={{ pathname: `/profile/${currentUser?.id}` }}>
+                  Profile
+                </Link>
+              </Dropdown.Item>
+
+              <Dropdown.Item key='logout' withDivider color='error'>
+                <Button auto flat onClick={handleSignOut} href='#'>
+                  Sign Out
+                </Button>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </NextUiNav.Content>
+      )}
       <SearchResults results={results} />
-    </>
+    </NextUiNav>
   )
 }

@@ -3,7 +3,6 @@ import { Card, Container } from '@nextui-org/react';
 import { useSessionContext, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Auth, ThemeSupa } from '@supabase/auth-ui-react';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 
 const Home: any = () => {
   const { isLoading, session, error } = useSessionContext()
@@ -26,13 +25,13 @@ const Home: any = () => {
   //   getUser()
   // }, [])
 
-  useEffect(() => {
-    if (session) {
-      const { user } = session
-      console.log('user: ', user)
-      router.push(`/profile/${user?.id}`)
-    }
-  }, [session])
+  // useEffect(() => {
+  //   if (session) {
+  //     const { user } = session
+  //     console.log('user: ', user)
+  //     router.push(`/profile/${user?.id}`)
+  //   }
+  // }, [session])
 
   // if(session && user) {
 

@@ -4,8 +4,7 @@ import { FriendsList } from '@/components/FriendsList';
 import { UserBookClubs } from '@/components/UserBookClubs';
 import UserContext from '@/features/auth/UserContext';
 import { fetchUser } from '@/lib/Store';
-import { ProfileSideBarMenu } from '@/pages/profile/Profile.style';
-import { Grid } from '@nextui-org/react';
+import { Container } from '@nextui-org/react';
 import { useRouter } from 'next/router';
 import { FunctionComponent, useContext, useEffect } from 'react';
 
@@ -44,17 +43,12 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   // }, [currentUser])
 
   return (
-    <Grid.Container gap={2} justify='space-evenly'>
-      <Grid xs={2}>
-        <ProfileSideBarMenu>
-          <li>Edit</li>
-        </ProfileSideBarMenu>
-      </Grid>
-      <Grid xs={8}>
-        {currentUser && <UserBookClubs bookClubs={currentUser?.book_clubs} />}
-      </Grid>
-      <Grid xs={2}>{currentUser && <FriendsList />}</Grid>
-    </Grid.Container>
+    <Container>
+      {currentUser && <FriendsList />}
+      {/* </Grid>
+      <Grid xs={10}> */}
+      {currentUser && <UserBookClubs bookClubs={currentUser?.book_clubs} />}
+    </Container>
   )
 }
 

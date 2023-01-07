@@ -1,6 +1,5 @@
 import { FriendRequest } from '@/components/SearchResults/FriendRequest';
 import UserContext from '@/features/auth/UserContext';
-import { NotificationsContext } from '@/features/notifications/NotificationsContext';
 import { Button, Grid, Modal, Text } from '@nextui-org/react';
 import * as React from 'react';
 import { useContext, useEffect } from 'react';
@@ -14,7 +13,6 @@ export const SearchResults: React.FunctionComponent<SearchResultsProps> = ({
 }: SearchResultsProps) => {
   const { currentUser } = useContext(UserContext)
   const [open, setOpen] = React.useState(results)
-  const { addFriendRequestNotification } = useContext(NotificationsContext)
 
   const close = () => setOpen(false)
 

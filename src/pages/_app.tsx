@@ -24,12 +24,11 @@ function MyApp({
   const [supabaseClient] = useState(() => createBrowserSupabaseClient())
 
   return (
-    <NextUIProvider>
+    <NextUIProvider theme={darkTheme}>
       <SessionContextProvider
         supabaseClient={supabaseClient}
         initialSession={pageProps.initialSession}
       >
-        {/* <ThemeProvider theme={{}}> */}
         <GlobalStyle />
 
         <UserContextProvider supabaseClient={supabaseClient}>
@@ -39,7 +38,6 @@ function MyApp({
             <Component {...pageProps} />
           </NotificationsProvider>
         </UserContextProvider>
-        {/* </ThemeProvider> */}
       </SessionContextProvider>
     </NextUIProvider>
   )

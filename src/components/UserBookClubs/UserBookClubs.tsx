@@ -81,7 +81,7 @@ export const UserBookClubs: React.FunctionComponent<UserBookClubsProps> = ({
   bookClubs,
 }: UserBookClubsProps) => {
   return (
-    <Grid.Container gap={2} justify='center'>
+    <Grid.Container gap={2} justify='flex-start'>
       {bookClubs.map((bookClub) => (
         <Grid xs={12} sm={4}>
           <BookClubCard bookClub={bookClub} />
