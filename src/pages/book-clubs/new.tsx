@@ -4,7 +4,7 @@ import { GoogleBooks } from '@/components/GoogleBooksPreview';
 import UserContext from '@/features/auth/UserContext';
 import { useSearch } from '@/hooks/useSearch';
 import { createBookClub } from '@/lib/Store';
-import { Button, Card, Col, Dropdown, Grid, Row, Text } from '@nextui-org/react';
+import { Button, Card, Col, Grid, Row, Text } from '@nextui-org/react';
 import { FunctionComponent, useCallback, useContext, useEffect, useState } from 'react';
 
 interface NewBookClubProps {}
@@ -19,7 +19,14 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
     ownerId: currentUser?.id,
     imageUrl: null,
     status: null,
-    schedule: [],
+
+    // schedule: [],
+  })
+
+  const [invites, setInvites] = useState([])
+
+  const [schedule, setSchedule] = useState({
+    days: [],
     startTime: null,
     endTime: null,
   })
@@ -46,10 +53,16 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
     handleSearchString,
   } = useSearch(searchBookTitles)
 
-  const handleBookClubData = (newData) => {
+  const updateBookClubData = (bookClubData) => {
     setBookClub((bookClub) => ({
       ...bookClub,
-      ...newData,
+      ...bookClubData,
+    }))
+  }
+  const updateBookClubSchedule = (scheduleData) => {
+    setSchedule((schedule) => ({
+      ...schedule,
+      ...scheduleData,
     }))
   }
   const [previewLoaded, setPreviewLoaded] = useState(false)
@@ -62,42 +75,32 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
   const handleNewBookClub = async () => {
     // const data = await createBookClub()
 
-    const { days, startTime, endTime, ...rest } = bookClub
-    const schedule = {
-      days,
-      startTime,
-      endTime,
-    }
-    const club = {
-      ...rest,
-    }
-    const res = await createBookClub({ schedule, club })
+    const res = await createBookClub({ schedule, bookClub })
     console.log('res: ', res)
   }
 
   useEffect(() => {
     if (results?.length) {
-      setCurrentBook(results[0])
+      const current = results[0]
+      setCurrentBook(current)
+      setBookClub((bookClub) => ({
+        ...bookClub,
+        bookId: current.id,
+        imageUrl: current.volumeInfo.imageLinks.thumbnail,
+      }))
     }
   }, [results])
 
-  useEffect(() => {
-    if (currentBook?.id) {
-      setBookClub((bookClub) => ({
-        ...bookClub,
-        bookId: currentBook.id,
-        imageUrl: currentBook.volumeInfo.imageLinks.thumbnail,
-      }))
-    }
-  }, [currentBook])
+  // useEffect(() => {
+  //   if (currentBook?.id) {
+  //     setBookClub((bookClub) => ({
+  //       ...bookClub,
+  //       bookId: currentBook.id,
+  //       imageUrl: currentBook.volumeInfo.imageLinks.thumbnail,
+  //     }))
+  //   }
+  // }, [currentBook])
 
-  const friendsToInvite = currentUser?.friends?.length
-    ? currentUser.friends.map((friend) => ({
-        key: friend.email,
-        id: friend.id,
-        name: friend?.full_name,
-      }))
-    : []
   // fetchUsersFriends
 
   // useEffect(() => {
@@ -124,7 +127,8 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
           {/* <Grid xs={3}></Grid> */}
           <Grid xs={9}>
             <BookClubForm
-              handleBookClubData={handleBookClubData}
+              updateBookClubData={updateBookClubData}
+              updateBookClubSchedule={updateBookClubSchedule}
               bookClub={bookClub}
               searchBookTitles={handleSearchString}
               bookTitle={bookTitle}
@@ -149,12 +153,14 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
           borderTop: '$borderWeights$light solid $gray800',
           bottom: 0,
           zIndex: 1,
+          display: 'flex',
+          justifyContent: 'flex-end',
         }}
       >
         <Row>
           <Col>
             <Row justify='flex-start'>
-              <Dropdown>
+              {/* <Dropdown>
                 <Dropdown.Button flat>Trigger</Dropdown.Button>
                 <Dropdown.Menu
                   aria-label='Dynamic Actions'
@@ -169,7 +175,7 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
                     </Dropdown.Item>
                   )}
                 </Dropdown.Menu>
-              </Dropdown>
+              </Dropdown> */}
               <Button
                 flat
                 auto

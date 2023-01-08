@@ -42,13 +42,11 @@ export const NavBar: React.FunctionComponent<NavBarProps> = (
   props: NavBarProps
 ) => {
   const { isLoading, session, error } = useSessionContext()
-  console.log('session: ', session)
-  const { currentUser } = React.useContext(UserContext)
-  const { notifications, friendRequests, acceptFriendRequest } =
-    React.useContext(NotificationsContext)
-  console.log('friendRequests: ', friendRequests)
 
-  console.log('currentUser: ', currentUser)
+  const { currentUser } = React.useContext(UserContext)
+  const { notifications, friendRequests } =
+    React.useContext(NotificationsContext)
+
   const supabaseClient = useSupabaseClient()
 
   const {
@@ -103,12 +101,12 @@ export const NavBar: React.FunctionComponent<NavBarProps> = (
 
           <Dropdown placement='bottom-right'>
             <Dropdown.Trigger>
-              <Tooltip
-                placement='bottom'
-                trigger='hover'
-                content={<FriendRequests />}
-              >
-                <NextUiNav.Item>
+              <NextUiNav.Item>
+                <Tooltip
+                  placement='bottom'
+                  trigger='hover'
+                  content={<FriendRequests />}
+                >
                   <Badge
                     size='lg'
                     content={friendRequests?.length}
@@ -118,8 +116,8 @@ export const NavBar: React.FunctionComponent<NavBarProps> = (
                   >
                     <UserAvatar {...currentUser} />
                   </Badge>
-                </NextUiNav.Item>
-              </Tooltip>
+                </Tooltip>
+              </NextUiNav.Item>
             </Dropdown.Trigger>
             <Dropdown.Menu
               aria-label='User menu actions'

@@ -1,6 +1,6 @@
+import { FriendsList } from '@/components/FriendsList';
 import { Checkbox, Grid, Input, Loading, Spacer, Text } from '@nextui-org/react';
 import TimePicker from 'rc-time-picker';
-import { useState } from 'react';
 
 interface BookSearchResultsProps {}
 
@@ -44,14 +44,13 @@ export type BookClubSchedule = {
 export const BookClubForm = ({
   bookTitle,
   currentBook,
-  handleBookClubData,
+  updateBookClubData,
+  updateBookClubSchedule,
   handleNewBookClub,
   currentUser,
   handleEnterKeyPress,
   searchBookTitles,
 }: any) => {
-  const [days, setDays] = useState([])
-
   const format = 'h:mm'
 
   const handleStartTime = (timeData: {
@@ -65,7 +64,7 @@ export const BookClubForm = ({
 
     const startTime = `${hour} ${timeOfDay}`
 
-    handleBookClubData({ startTime })
+    updateBookClubSchedule({ startTime })
   }
 
   const handleEndTime = (timeData: {
@@ -79,69 +78,63 @@ export const BookClubForm = ({
 
     const endTime = `${hour} ${timeOfDay}`
 
-    handleBookClubData({ endTime })
+    updateBookClubSchedule({ endTime })
   }
   const handleSchedule = (days: any) => {
-    updateBookClubData({ days })
+    updateBookClubSchedule({ days })
   }
-  const updateBookClubData = (data: { days?: any; name?: any }) => {
-    handleBookClubData(data)
-  }
+  // const handleBookClubData = (data: { schedule?: any; name?: any }) => {
+  //   updateBookClubData(data)
+  // }
 
   const handleName = ({ target: { value: name } }) => {
     updateBookClubData({ name })
+  }
+
+  const handleInvite = (friend) => {
+    console.log('friend: ', friend)
   }
 
   return (
     <Grid.Container>
       <Grid xs={8}>
         <Grid.Container gap={4}>
-          <Grid>
-            <Spacer />
+          <Grid xs={6} css={{ display: 'block!important' }}>
             <Text h3>Enter a name for your book club</Text>
-            <Input bordered labelLeft='Club Name' onChange={handleName} />
-
             <Spacer />
+            <div>
+              <Input bordered labelLeft='Club Name' onChange={handleName} />
+            </div>
+          </Grid>
+          <Grid xs={6} css={{ display: 'block!important' }}>
             <Text h3>Search books by title using Google Books</Text>
+            <Spacer />
 
-            <Input
-              onKeyPress={handleEnterKeyPress}
-              clearable
-              color='primary'
-              bordered
-              type='search'
-              value={bookTitle}
-              labelLeft='Book Name'
-              onChange={searchBookTitles}
-              contentRight={
-                bookTitle && bookTitle !== '' ? <Loading size='xs' /> : null
-              }
-            />
+            <div>
+              <Input
+                onKeyPress={handleEnterKeyPress}
+                clearable
+                color='primary'
+                bordered
+                type='search'
+                value={bookTitle}
+                labelLeft='Book Name'
+                onChange={searchBookTitles}
+                contentRight={
+                  bookTitle && bookTitle !== '' ? <Loading size='xs' /> : null
+                }
+              />
+            </div>
           </Grid>
 
-          <Grid>
-            <TimePicker
-              showSecond={false}
-              className='xxx'
-              onChange={handleStartTime}
-              // value={bookClub.startTime}
-              format={format}
-              use12Hours
-              inputReadOnly
-            />
+          <Grid xs={12}>
+            <Text h3>Invite Your Friends</Text>
+            <Spacer />
+
+            <FriendsList onClick={handleInvite} />
           </Grid>
-          <Grid>
-            <TimePicker
-              showSecond={false}
-              className='xxx'
-              onChange={handleEndTime}
-              // value={bookClub.endTime}
-              format={format}
-              use12Hours
-              inputReadOnly
-            />
-          </Grid>
-          <Grid>
+
+          <Grid xs={12}>
             <Checkbox.Group
               onChange={handleSchedule}
               label='Select schedule'
@@ -152,32 +145,29 @@ export const BookClubForm = ({
                 <Checkbox value={day}>{day}</Checkbox>
               ))}
             </Checkbox.Group>
-            {/* <Dropdown>
-      <Dropdown.Button flat color="secondary" css={{ tt: "capitalize" }}>
-        {selectedValue}
-      </Dropdown.Button>
-      <Dropdown.Menu
-        aria-label="Multiple selection actions"
-        color="secondary"
-        disallowEmptySelection
-        selectionMode="multiple"
-        selectedKeys={selected}
-        onSelectionChange={setSelected}
-      >
-        <Dropdown.Item key="text">Text</Dropdown.Item>
-        <Dropdown.Item key="number">Number</Dropdown.Item>
-        <Dropdown.Item key="date">Date</Dropdown.Item>
-        <Dropdown.Item key="single_date">Single Date</Dropdown.Item>
-        <Dropdown.Item key="iteration">Iteration</Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown> */}
-          </Grid>
 
-          {/* <Grid>
-                <Checkbox color='gradient' defaultSelected={false}>
-                  Public?
-                </Checkbox>
-              </Grid> */}
+            <Grid xs={12}>
+              <TimePicker
+                showSecond={false}
+                className='xxx'
+                onChange={handleStartTime}
+                // value={bookClub.startTime}
+                format={format}
+                use12Hours
+                inputReadOnly
+              />
+
+              <TimePicker
+                showSecond={false}
+                className='xxx'
+                onChange={handleEndTime}
+                // value={bookClub.endTime}
+                format={format}
+                use12Hours
+                inputReadOnly
+              />
+            </Grid>
+          </Grid>
         </Grid.Container>
       </Grid>
     </Grid.Container>

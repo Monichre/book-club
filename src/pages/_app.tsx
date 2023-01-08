@@ -1,5 +1,6 @@
 import 'rc-time-picker/assets/index.css';
 
+import { Layout } from '@/components/Layout';
 import { NavBar } from '@/components/NavBar';
 import { UserContextProvider } from '@/features/auth/UserContext';
 import NotificationsProvider from '@/features/notifications/NotificationsContext';
@@ -34,8 +35,9 @@ function MyApp({
         <UserContextProvider supabaseClient={supabaseClient}>
           <NotificationsProvider>
             <NavBar />
-
-            <Component {...pageProps} />
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
           </NotificationsProvider>
         </UserContextProvider>
       </SessionContextProvider>

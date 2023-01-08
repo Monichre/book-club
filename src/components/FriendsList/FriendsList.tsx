@@ -5,19 +5,39 @@ import * as React from 'react';
 
 import { FriendsListWrapper } from './FriendsList.style';
 
-export type FriendsListProps = {}
+export type FriendsListProps = {
+  onClick?: (friend) => {}
+}
 
-export const FriendsList: React.FunctionComponent<
-  FriendsListProps
-> = ({}: FriendsListProps) => {
+interface FriendAvatarProps {
+  onClick?: (friend) => {}
+  friend: any
+}
+
+const FriendAvatar: React.FC<FriendAvatarProps> = ({ friend, onClick }) => {
+  console.log('friend: ', friend)
+  const handleClick = () => {
+    onClick(friend)
+  }
+
+  return (
+    <Avatar
+      onClick={handleClick}
+      key={friend.id}
+      size='lg'
+      pointer
+      // src={friend.avatar_url || null}
+      text={friend.name || friend.email}
+      stacked
+    />
+  )
+}
+
+export const FriendsList: React.FunctionComponent<FriendsListProps> = ({
+  onClick,
+}: FriendsListProps) => {
   const { currentUser }: any = React.useContext(UserContext)
   const [friends, setFriends]: any = React.useState([])
-  // console.log('friends: ', friends)
-  // const getFriends = useCallback(() => {
-  //   fetchUsersFriends(currentUser.id).then(({ friends: friendsList }) =>
-  //     return friendsList
-  //   )
-  // }, [friends, currentUser])
 
   React.useEffect(() => {
     if (currentUser) {
@@ -46,15 +66,7 @@ export const FriendsList: React.FunctionComponent<
                 | React.ReactPortal
                 | null
                 | undefined
-            }) => (
-              <Avatar
-                key={friend.id}
-                size='lg'
-                pointer
-                src={friend.avatar_url}
-                stacked
-              />
-            )
+            }) => <FriendAvatar friend={friend} onClick={onClick} />
           )}
       </Avatar.Group>
     </FriendsListWrapper>

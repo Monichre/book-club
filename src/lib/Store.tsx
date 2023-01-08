@@ -11,7 +11,9 @@ export const supabase = createClient(
 /**
  * @param {number} channelId the currently selected Channel
  */
-export const useStore = (props: { channelId: any }) => {
+export const useStore = (
+  { channelId = null, userId }: { channelId: any; userId: string } = null
+) => {
   const [channels, setChannels] = useState([])
   const [messages, setMessages] = useState([])
 
@@ -72,27 +74,32 @@ export const useStore = (props: { channelId: any }) => {
     }
   }, [])
 
+  useEffect(() => {
+    if (userId) {
+      fetchChannels(userId).then((res) => setChannels(res))
+    }
+  }, [userId])
   // Update when the route changes
   useEffect(() => {
-    if (props?.channelId > 0) {
+    if (channelId > 0) {
       fetchMessages(
-        props.channelId,
+        channelId,
         (messages: any[] | ((prevState: never[]) => never[])) => {
           messages.forEach((x: { user_id: any; author: any }) =>
-            users.set(x.user_id, x.author)
+            users.set(xuser_id, x.author)
           )
           setMessages(messages)
         }
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.channelId])
+  }, [channelId])
 
   // New message received from Postgres
   useEffect(() => {
-    if (newMessage && newMessage.channel_id === Number(props.channelId)) {
+    if (newMessage && newMessage.channel_id === Number(channelId)) {
       const handleAsync = async () => {
-        let authorId = newMessage.user_id
+        let authorId = newMessageuser_id
         if (!users.get(authorId))
           await fetchUser(authorId, (user: SetStateAction<null>) =>
             handleNewOrUpdatedUser(user)
@@ -136,7 +143,7 @@ export const useStore = (props: { channelId: any }) => {
 
   return {
     // We can export computed values here to map the authors to each message
-    messages: messages.map((x) => ({ ...x, author: users.get(x.user_id) })),
+    messages: messages.map((x) => ({ ...x, author: users.get(xuser_id) })),
     channels:
       channels !== null
         ? channels.sort((a, b) => a.slug.localeCompare(b.slug))
@@ -149,14 +156,16 @@ export const useStore = (props: { channelId: any }) => {
  * Fetch all channels
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
-export const fetchChannels = async (setState: {
-  (value: SetStateAction<never[]>): void
-  (arg0: any[] | null): void
-}) => {
+export const fetchChannels = async (userId) => {
   try {
-    let { data } = await supabase.from('book_club_channels').select('*')
-    if (setState) setState(data)
-    return data
+    if (userId) {
+      let { data } = await supabase
+        .from('book_club_users')
+        .select('*')
+        .eq('user_id', userId)
+
+      return data
+    }
   } catch (error) {}
 }
 
@@ -325,6 +334,20 @@ type BookClubChannelPayload = {
   bookClubId: string
 }
 
+const addBookClubUser = async ({ bookClubId, userId }) => {
+  let { data } = await supabase
+    .from('book_club_users')
+    .insert([
+      {
+        book_club_id: bookClubId,
+        user_id: userId,
+      },
+    ])
+    .select('*')
+
+  return data
+}
+
 const createBookClubChannel = async (channel: BookClubChannelPayload) => {
   let { data } = await supabase
     .from('book_club_channels')
@@ -339,6 +362,9 @@ const createBookClubChannel = async (channel: BookClubChannelPayload) => {
 }
 
 const createBookClubCurriculum = async (schedule: BookClubSchedule) => {
+  const { startTime, endTime } = schedule
+  const days = schedule.days.join()
+
   let { data } = await supabase
     .from('book_club_schedule')
     .insert([
@@ -353,13 +379,13 @@ const createBookClubCurriculum = async (schedule: BookClubSchedule) => {
 
 export const createBookClub = async ({
   schedule,
-  club,
+  bookClub,
 }: {
   schedule: BookClubSchedule
-  club: NewBookClubData
+  bookClub: NewBookClubData
 }) => {
-  const payload = snakeCaseObjectFields(club)
-  const { ownerId } = club
+  const payload = snakeCaseObjectFields(bookClub)
+  const { ownerId } = bookClub
   try {
     let { data } = await supabase
       .from('book_clubs')
@@ -368,14 +394,16 @@ export const createBookClub = async ({
           ...payload,
         },
       ])
-      .select()
+      .select('*')
 
     const bookClub = data[0]
+
     const { name, id: bookClubId } = bookClub
+
     const channel = await createBookClubChannel({ ownerId, name, bookClubId })
 
     const bookClubSchedule = await createBookClubCurriculum(schedule)
-
+    await addBookClubUser({ ownerId, bookClubId })
     return {
       bookClub,
       channel,
@@ -400,8 +428,6 @@ export const sendFriendRequest = async ({ requestorId, inviteeId }) => {
 }
 
 export const acceptFriendRequest = async ({ accepted, ...rest }) => {
-  console.log('rest: ', rest)
-  console.log('accepted: ', accepted)
   let { status } = await supabase
     .from('friend_requests')
     .update([
@@ -440,7 +466,7 @@ export const getFriendRequests = async (invitee_id) => {
 }
 
 export const getUsersFriends = async (userId) => {
-  let { data: friends } = await supabase
+  let { data } = await supabase
     .from('friend_requests')
     .select(
       `*, 
@@ -452,7 +478,7 @@ export const getUsersFriends = async (userId) => {
     .match({
       accepted: true,
     })
-  console.log('friends: ', friends)
+  const friends = data?.map(({ from }) => from)
 
   // .eq(`invitee_id`, invitee_id)
 
