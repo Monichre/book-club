@@ -91,27 +91,6 @@ const NewBookClub: FunctionComponent<NewBookClubProps> = () => {
     }
   }, [results])
 
-  // useEffect(() => {
-  //   if (currentBook?.id) {
-  //     setBookClub((bookClub) => ({
-  //       ...bookClub,
-  //       bookId: currentBook.id,
-  //       imageUrl: currentBook.volumeInfo.imageLinks.thumbnail,
-  //     }))
-  //   }
-  // }, [currentBook])
-
-  // fetchUsersFriends
-
-  // useEffect(() => {
-  //   if (currentUser?.id) {
-  //     setBookClub((bookClub) => ({
-  //       ...bookClub,
-  //       ownerId: currentUser.id,
-  //     }))
-  //   }
-  // }, [currentUser])
-
   return (
     <Card>
       <Card.Header>

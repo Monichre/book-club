@@ -80,25 +80,31 @@ export interface Database {
       }
       book_club_books: {
         Row: {
-          id: number
-          book_id: number
-          book_club_id: number
-          start_date: string | null
-          end_date: string | null
-        }
-        Insert: {
-          id?: number
-          book_id: number
           book_club_id: number
           start_date?: string | null
           end_date?: string | null
+          id: string
+
+          title: string
+          image_url: string | null
+        }
+        Insert: {
+          book_club_id: number
+          start_date?: string | null
+          end_date?: string | null
+          id?: string
+
+          title: string
+          image_url?: string | null
         }
         Update: {
-          id?: number
-          book_id?: number
           book_club_id?: number
           start_date?: string | null
           end_date?: string | null
+          id?: string
+
+          title?: string
+          image_url?: string | null
         }
       }
       book_club_channels: {
@@ -127,7 +133,7 @@ export interface Database {
           created_at: string | null
           book_club_id: number | null
           invitee_id: string | null
-          invitor_id: string | null
+          requestor_id: string | null
           title: string | null
           message: string | null
         }
@@ -136,7 +142,7 @@ export interface Database {
           created_at?: string | null
           book_club_id?: number | null
           invitee_id?: string | null
-          invitor_id?: string | null
+          requestor_id?: string | null
           title?: string | null
           message?: string | null
         }
@@ -145,50 +151,12 @@ export interface Database {
           created_at?: string | null
           book_club_id?: number | null
           invitee_id?: string | null
-          invitor_id?: string | null
+          requestor_id?: string | null
           title?: string | null
           message?: string | null
         }
       }
-      book_club_schedule: {
-        Row: {
-          id: number
-          created_at: string | null
-          book_club_id: number | null
-          days:
-            | Database['public']['Enums']['book_club_curriculum_schedule']
-            | null
-          start_time: string | null
-          end_time: string | null
-          title: string | null
-          content: string | null
-        }
-        Insert: {
-          id?: number
-          created_at?: string | null
-          book_club_id?: number | null
-          days?:
-            | Database['public']['Enums']['book_club_curriculum_schedule']
-            | null
-          start_time?: string | null
-          end_time?: string | null
-          title?: string | null
-          content?: string | null
-        }
-        Update: {
-          id?: number
-          created_at?: string | null
-          book_club_id?: number | null
-          days?:
-            | Database['public']['Enums']['book_club_curriculum_schedule']
-            | null
-          start_time?: string | null
-          end_time?: string | null
-          title?: string | null
-          content?: string | null
-        }
-      }
-      book_club_users: {
+      book_club_members: {
         Row: {
           id: number
           created_at: string | null
@@ -208,6 +176,38 @@ export interface Database {
           book_club_id?: number
         }
       }
+      book_club_schedule: {
+        Row: {
+          id: number
+          created_at: string | null
+          book_club_id: number | null
+          days: string[] | null
+          start_time: string | null
+          end_time: string | null
+          title: string | null
+          content: string | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string | null
+          book_club_id?: number | null
+          days?: string[] | null
+          start_time?: string | null
+          end_time?: string | null
+          title?: string | null
+          content?: string | null
+        }
+        Update: {
+          id?: number
+          created_at?: string | null
+          book_club_id?: number | null
+          days?: string[] | null
+          start_time?: string | null
+          end_time?: string | null
+          title?: string | null
+          content?: string | null
+        }
+      }
       book_clubs: {
         Row: {
           id: number
@@ -217,7 +217,8 @@ export interface Database {
           public: boolean | null
           created_at: string
           owner_id: string
-          book_id: string
+          schedule: number | null
+          channel: number | null
         }
         Insert: {
           id?: number
@@ -227,7 +228,8 @@ export interface Database {
           public?: boolean | null
           created_at?: string
           owner_id: string
-          book_id: string
+          schedule?: number | null
+          channel?: number | null
         }
         Update: {
           id?: number
@@ -237,24 +239,54 @@ export interface Database {
           public?: boolean | null
           created_at?: string
           owner_id?: string
-          book_id?: string
+          schedule?: number | null
+          channel?: number | null
         }
       }
-      friends: {
+      books: {
+        Row: {
+          id: string
+          created_at: string | null
+          title: string | null
+          image_url: string | null
+          description: string | null
+        }
+        Insert: {
+          id: string
+          created_at?: string | null
+          title?: string | null
+          image_url?: string | null
+          description?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          title?: string | null
+          image_url?: string | null
+          description?: string | null
+        }
+      }
+      friend_requests: {
         Row: {
           created_at: string | null
           invitee_id: string
-          invitor_id: string
+          requestor_id: string
+          accepted: boolean | null
+          id: string
         }
         Insert: {
           created_at?: string | null
           invitee_id: string
-          invitor_id: string
+          requestor_id: string
+          accepted?: boolean | null
+          id?: string
         }
         Update: {
           created_at?: string | null
           invitee_id?: string
-          invitor_id?: string
+          requestor_id?: string
+          accepted?: boolean | null
+          id?: string
         }
       }
       messages: {
@@ -263,21 +295,21 @@ export interface Database {
           inserted_at: string
           message: string | null
           user_id: string
-          book_club_channel: number | null
+          channel_id: number | null
         }
         Insert: {
           id?: number
           inserted_at?: string
           message?: string | null
           user_id: string
-          book_club_channel?: number | null
+          channel_id?: number | null
         }
         Update: {
           id?: number
           inserted_at?: string
           message?: string | null
           user_id?: string
-          book_club_channel?: number | null
+          channel_id?: number | null
         }
       }
       role_permissions: {
@@ -320,7 +352,7 @@ export interface Database {
           id: string
           updated_at: string | null
           username: string | null
-          full_name: string | null
+          name: string | null
           avatar_url: string | null
           email: string | null
         }
@@ -329,7 +361,7 @@ export interface Database {
           id?: string
           updated_at?: string | null
           username?: string | null
-          full_name?: string | null
+          name?: string | null
           avatar_url?: string | null
           email?: string | null
         }
@@ -338,9 +370,29 @@ export interface Database {
           id?: string
           updated_at?: string | null
           username?: string | null
-          full_name?: string | null
+          name?: string | null
           avatar_url?: string | null
           email?: string | null
+        }
+      }
+      users_friend_requests: {
+        Row: {
+          id: string
+          created_at: string | null
+          friend_request_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id: string
+          created_at?: string | null
+          friend_request_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          friend_request_id?: string | null
+          user_id?: string | null
         }
       }
     }

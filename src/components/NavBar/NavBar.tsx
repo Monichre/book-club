@@ -57,6 +57,7 @@ export const NavBar: React.FunctionComponent<NavBarProps> = (
   } = useSearch(searchUsers)
 
   const handleSignOut = async () => await supabaseClient.auth.signOut()
+
   return (
     <NextUiNav isBordered variant={'sticky'}>
       <NextUiNav.Brand>

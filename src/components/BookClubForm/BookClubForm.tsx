@@ -1,5 +1,7 @@
 import { FriendsList } from '@/components/FriendsList';
+import { InviteByEmail } from '@/components/InviteByEmail';
 import { Checkbox, Grid, Input, Loading, Spacer, Text } from '@nextui-org/react';
+import { Space } from 'antd';
 import TimePicker from 'rc-time-picker';
 
 interface BookSearchResultsProps {}
@@ -129,9 +131,10 @@ export const BookClubForm = ({
 
           <Grid xs={12}>
             <Text h3>Invite Your Friends</Text>
-            <Spacer />
-
-            <FriendsList onClick={handleInvite} />
+            <Space>
+              <FriendsList onClick={handleInvite} />
+              <InviteByEmail />
+            </Space>
           </Grid>
 
           <Grid xs={12}>

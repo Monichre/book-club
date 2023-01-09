@@ -1,9 +1,10 @@
 import UserContext from '@/features/auth/UserContext';
 import { useStore } from '@/lib/Store';
-import { Avatar, Collapse, Grid, Text } from '@nextui-org/react';
+import { Avatar, Button, Collapse, Grid, Text } from '@nextui-org/react';
 import { useUser } from '@supabase/auth-helpers-react';
+import Link from 'next/link';
 import * as React from 'react';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 
 import { SideBarWrapper } from './SideBar.style';
 
@@ -15,34 +16,41 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
   const user = useUser()
   const { currentUser } = useContext(UserContext)
 
+  const [userChannels, setUserChannels] = React.useState([])
+
   const bookClubs = currentUser?.book_clubs
+  // getTotalBookClubMembers
+  // getBookClub
 
   const { channels } = useStore({ userId: user?.id })
+  console.log('channels: ', channels)
 
-  const slugify = (text) => {
-    return text
-      .toString()
-      .toLowerCase()
-      .replace(/\s+/g, '-') // Replace spaces with -
-      .replace(/[^\w-]+/g, '') // Remove all non-word chars
-      .replace(/--+/g, '-') // Replace multiple - with single -
-      .replace(/^-+/, '') // Trim - from start of text
-      .replace(/-+$/, '') // Trim - from end of text
-  }
+  useEffect(() => {
+    if (channels?.length && bookClubs?.length) {
+      const channelsWithBookClubData = channels.map((channel) => {
+        const bookClub = bookClubs.find(
+          (bookClub) => bookClub.id === channel.book_club_id
+        )
+        return {
+          ...channel,
+          bookClub,
+        }
+      })
+      console.log('channelsWithBookClubData: ', channelsWithBookClubData)
 
-  const newChannel = async () => {
-    const slug = prompt('Please enter your name')
-    if (slug) {
-      // addChannel(slugify(slug), user.id)
+      setUserChannels(channelsWithBookClubData)
     }
-  }
+  }, [channels, bookClubs])
+
   return (
     <SideBarWrapper>
       <Grid.Container gap={2}>
         <Grid>
           <Text h2>Chats</Text>
           <Collapse.Group shadow>
-            {channels.map((channel) => {
+            {userChannels.map((channel) => {
+              const link = `/book-clubs/${channel.bookClub.id}/channels/${channel.id}`
+              console.log('link: ', link)
               return (
                 <Collapse
                   title={<Text h4>{channel.name}</Text>}
@@ -50,19 +58,22 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
                   contentLeft={
                     <Avatar
                       size='lg'
-                      src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
+                      src={channel.bookClub.image_url}
                       color='secondary'
                       bordered
                       squared
                     />
                   }
                 >
-                  <Text>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                  </Text>
+                  <Button shadow color='gradient' auto>
+                    <Link
+                      href={{
+                        pathname: link,
+                      }}
+                    >
+                      {channel.name}
+                    </Link>
+                  </Button>
                 </Collapse>
               )
             })}
@@ -75,12 +86,12 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
               ? bookClubs.map((bookClub) => {
                   return (
                     <Collapse
-                      title={<Text h4>Janelle Lenard</Text>}
+                      title={<Text h4>{bookClub?.name}</Text>}
                       subtitle='3 incompleted steps'
                       contentLeft={
                         <Avatar
                           size='lg'
-                          src='https://i.pravatar.cc/150?u=a042581f4e29026704d'
+                          src={bookClub.image_url}
                           color='success'
                           bordered
                           squared

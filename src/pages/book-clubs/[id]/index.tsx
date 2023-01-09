@@ -1,3 +1,5 @@
+import { FunctionComponent } from 'react';
+
 interface BookClubProps {}
 
 const BookClub: FunctionComponent<BookClubProps> = () => {

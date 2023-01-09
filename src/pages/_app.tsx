@@ -5,6 +5,7 @@ import { NavBar } from '@/components/NavBar';
 import { UserContextProvider } from '@/features/auth/UserContext';
 import NotificationsProvider from '@/features/notifications/NotificationsContext';
 import { GlobalStyle } from '@/styles/GlobalStyles';
+import { StyleProvider } from '@ant-design/cssinjs';
 import { createTheme, NextUIProvider } from '@nextui-org/react';
 import { createBrowserSupabaseClient, Session } from '@supabase/auth-helpers-nextjs';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
@@ -22,26 +23,33 @@ function MyApp({
 }: AppProps<{
   initialSession: Session
 }>) {
-  const [supabaseClient] = useState(() => createBrowserSupabaseClient())
+  const [supabaseClient] = useState(() =>
+    createBrowserSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+  )
 
   return (
-    <NextUIProvider theme={darkTheme}>
-      <SessionContextProvider
-        supabaseClient={supabaseClient}
-        initialSession={pageProps.initialSession}
-      >
-        <GlobalStyle />
+    <StyleProvider hashPriority='high'>
+      <NextUIProvider theme={darkTheme}>
+        <SessionContextProvider
+          supabaseClient={supabaseClient}
+          initialSession={pageProps.initialSession}
+        >
+          <GlobalStyle />
 
-        <UserContextProvider supabaseClient={supabaseClient}>
-          <NotificationsProvider>
-            <NavBar />
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </NotificationsProvider>
-        </UserContextProvider>
-      </SessionContextProvider>
-    </NextUIProvider>
+          <UserContextProvider supabaseClient={supabaseClient}>
+            <NotificationsProvider>
+              <NavBar />
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </NotificationsProvider>
+          </UserContextProvider>
+        </SessionContextProvider>
+      </NextUIProvider>
+    </StyleProvider>
   )
 }
 

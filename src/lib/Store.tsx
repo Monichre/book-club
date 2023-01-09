@@ -1,18 +1,12 @@
-import { BookClubSchedule, NewBookClubData } from '@/pages/profile/[id]';
+import { supabase } from '@/lib/supabase';
 import { snakeCaseObjectFields } from '@/utils/functions';
-import { createClient } from '@supabase/supabase-js';
-import { SetStateAction, useEffect, useState } from 'react';
-
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_KEY || ''
-)
+import { useEffect, useState } from 'react';
 
 /**
  * @param {number} channelId the currently selected Channel
  */
 export const useStore = (
-  { channelId = null, userId }: { channelId: any; userId: string } = null
+  { channelId = null, userId }: { channelId?: any; userId?: string } = null
 ) => {
   const [channels, setChannels] = useState([])
   const [messages, setMessages] = useState([])
@@ -35,7 +29,7 @@ export const useStore = (
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => handleNewMessage(payload.new)
+        (payload) => setMessages((messages) => [...messages, payload.new])
       )
       .on(
         'postgres_changes',
@@ -67,11 +61,13 @@ export const useStore = (
       )
       .subscribe()
     // Cleanup on unmount
-    return () => {
-      supabase.removeChannel('public:messages')
-      supabase.removeChannel('public:users')
-      supabase.removeChannel('public:channels')
-    }
+    // return () => {
+    //   // if (supabase) {
+    //   //   supabase.removeChannel('public:messages')
+    //   //   supabase.removeChannel('public:users')
+    //   //   supabase.removeChannel('public:channels')
+    //   // }
+    // }
   }, [])
 
   useEffect(() => {
@@ -81,35 +77,27 @@ export const useStore = (
   }, [userId])
   // Update when the route changes
   useEffect(() => {
-    if (channelId > 0) {
-      fetchMessages(
-        channelId,
-        (messages: any[] | ((prevState: never[]) => never[])) => {
-          messages.forEach((x: { user_id: any; author: any }) =>
-            users.set(xuser_id, x.author)
-          )
-          setMessages(messages)
-        }
-      )
+    if (channelId) {
+      fetchMessages(channelId).then((res) => setMessages(res))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId])
 
-  // New message received from Postgres
-  useEffect(() => {
-    if (newMessage && newMessage.channel_id === Number(channelId)) {
-      const handleAsync = async () => {
-        let authorId = newMessageuser_id
-        if (!users.get(authorId))
-          await fetchUser(authorId, (user: SetStateAction<null>) =>
-            handleNewOrUpdatedUser(user)
-          )
-        setMessages(messages.concat(newMessage))
-      }
-      handleAsync()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newMessage])
+  // // New message received from Postgres
+  // useEffect(() => {
+  //   if (newMessage && newMessage.channel_id === Number(channelId)) {
+  //     const handleAsync = async () => {
+  //       let authorId = newMessageuser_id
+  //       if (!users.get(authorId))
+  //         await fetchUser(authorId, (user: SetStateAction<null>) =>
+  //           handleNewOrUpdatedUser(user)
+  //         )
+  //       setMessages(messages.concat(newMessage))
+  //     }
+  //     handleAsync()
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [newMessage])
 
   // Deleted message received from postgres
   useEffect(() => {
@@ -143,11 +131,8 @@ export const useStore = (
 
   return {
     // We can export computed values here to map the authors to each message
-    messages: messages.map((x) => ({ ...x, author: users.get(xuser_id) })),
-    channels:
-      channels !== null
-        ? channels.sort((a, b) => a.slug.localeCompare(b.slug))
-        : [],
+    messages,
+    channels,
     users,
   }
 }
@@ -156,15 +141,31 @@ export const useStore = (
  * Fetch all channels
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
+
+export const fetchChannelByBookClubId = async (book_club_id) => {
+  let { data }: any = await supabase
+    .from('book_club_channels')
+    .select(`*`)
+    .eq('book_club_id', book_club_id)
+
+  return data[0]
+}
 export const fetchChannels = async (userId) => {
   try {
     if (userId) {
       let { data } = await supabase
-        .from('book_club_users')
-        .select('*')
+        .from('book_club_members')
+        .select(`book_club_id`)
         .eq('user_id', userId)
 
-      return data
+      const channels = await Promise.all(
+        data?.map(async ({ book_club_id }) => {
+          const channel = await fetchChannelByBookClubId(book_club_id)
+
+          return channel
+        })
+      )
+      return channels
     }
   } catch (error) {}
 }
@@ -177,7 +178,7 @@ export const fetchChannels = async (userId) => {
 export const fetchUsersBookClubs = async (userId: any) => {
   try {
     let { data: bookClubs } = await supabase
-      .from('book_club_users')
+      .from('book_club_members')
       .select(`*`)
       .eq('id', userId)
 
@@ -196,11 +197,24 @@ export const fetchUsersFriends = async (userId) => {
     .or(`invitee_id.eq.${userId},invitor_id.eq.${userId}`)
   return { friends }
 }
+export const updateUserOnlineStatus = async (userId) => {
+  const { data: user } = await supabase
+    .from('users')
+    .update({ status: 'ONLINE' })
+    .eq('id', userId)
+    .select(`*, book_clubs(*, schedule(*))`)
+    // .limit(1)
+    .single()
+
+  console.log('user: ', user)
+
+  return user
+}
 
 export const fetchUser = async ({ userId = null }: any) => {
   let { data } = await supabase
     .from('users')
-    .select(`*, book_clubs(*)`)
+    .select(`*, book_clubs(*, schedule(*))`)
     .eq('id', userId)
 
   const [user] = data || [null]
@@ -245,17 +259,14 @@ export const fetchUserRoles = async (
  * @param {number} channelId
  * @param {function} setState Optionally pass in a hook or callback to set the state
  */
-export const fetchMessages = async (
-  channelId: any,
-  setState: { (messages: any): void; (arg0: any[] | null): void }
-) => {
+export const fetchMessages = async (channelId: any) => {
   try {
     let { data } = await supabase
       .from('messages')
-      .select(`*, author:user_id(*)`)
+      .select(`*, from:user_id(*)`)
       .eq('channel_id', channelId)
       .order('inserted_at', true)
-    if (setState) setState(data)
+
     return data
   } catch (error) {}
 }
@@ -281,16 +292,14 @@ export const addChannel = async (slug: any, user_id: any) => {
  * @param {number} channel_id
  * @param {number} user_id The author
  */
-export const addMessage = async (
-  message: any,
-  channel_id: any,
-  user_id: any
-) => {
+export const addMessage = async ({ message, channel_id, user_id }) => {
   try {
     let { data } = await supabase
       .from('messages')
       .insert([{ message, channel_id, user_id }])
-      .select()
+      .select(`*, from:user_id(*)`)
+      .single()
+    console.log('message: ', data)
     return data
   } catch (error) {}
 }
@@ -333,10 +342,28 @@ type BookClubChannelPayload = {
   ownerId: string
   bookClubId: string
 }
+export const getTotalBookClubMembers = async ({ bookClubId }) => {
+  const { count: total } = await supabase
+    .from('book_club_members')
+    .select('*', { count: 'exact', head: true })
+  return total
+}
+export const getBookClub = async ({ bookClubId }) => {
+  const { data } = await supabase
+    .from(`book_clubs`)
+    .select(
+      `*, 
+book_club_members(*, users(*))
+`
+    )
+    .eq(`id`, bookClubId)
 
-const addBookClubUser = async ({ bookClubId, userId }) => {
+  return data
+}
+
+const addBookClubMember = async ({ bookClubId, userId }) => {
   let { data } = await supabase
-    .from('book_club_users')
+    .from('book_club_members')
     .insert([
       {
         book_club_id: bookClubId,
@@ -377,17 +404,41 @@ const createBookClubCurriculum = async (schedule: BookClubSchedule) => {
   return data
 }
 
+const createBookClubBook = async ({
+  bookId: id,
+  bookClubId: book_club_id,
+  name: title,
+  image_url,
+}) => {
+  let { data } = await supabase
+    .from('book_club_books')
+    .insert([
+      {
+        id,
+        book_club_id,
+        title,
+        image_url,
+      },
+    ])
+    .select()
+
+  return data
+}
+
 export const createBookClub = async ({
   schedule,
-  bookClub,
-}: {
+  bookClub: bookClubData,
+}: // invitees
+{
   schedule: BookClubSchedule
   bookClub: NewBookClubData
 }) => {
-  const payload = snakeCaseObjectFields(bookClub)
-  const { ownerId } = bookClub
+  const { bookId, ...rest } = bookClubData
+
+  const payload = snakeCaseObjectFields(rest)
+  const { ownerId } = bookClubData
   try {
-    let { data } = await supabase
+    let { data }: any = await supabase
       .from('book_clubs')
       .insert([
         {
@@ -398,16 +449,24 @@ export const createBookClub = async ({
 
     const bookClub = data[0]
 
-    const { name, id: bookClubId } = bookClub
+    const { name, id: bookClubId, image_url } = bookClub
 
     const channel = await createBookClubChannel({ ownerId, name, bookClubId })
-
     const bookClubSchedule = await createBookClubCurriculum(schedule)
-    await addBookClubUser({ ownerId, bookClubId })
+    const currentBook = await createBookClubBook({
+      bookId,
+      bookClubId,
+      name,
+      image_url,
+    })
+
+    await addBookClubMember({ userId: ownerId, bookClubId })
+
     return {
       bookClub,
       channel,
       bookClubSchedule,
+      currentBook,
     }
   } catch (error) {}
 }

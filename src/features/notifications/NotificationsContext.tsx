@@ -1,6 +1,7 @@
 import { NotificationsHub } from '@/components/Notifications';
 import UserContext from '@/features/auth/UserContext';
-import { acceptFriendRequest, getFriendRequests, supabase } from '@/lib/Store';
+import { acceptFriendRequest, getFriendRequests } from '@/lib/Store';
+import { supabase } from '@/lib/supabase';
 import { createContext, FunctionComponent, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 export const NotificationsContext = createContext({
@@ -10,16 +11,6 @@ export const NotificationsContext = createContext({
   handleAcceptFriendRequest: (req) => {},
   // addFriendRequestNotification: (latest) => {},
 })
-
-const objToArray = (obj) => Object.keys(obj).map((key) => obj[key])
-const arrayToMap = (arr) =>
-  arr.reduce((acc, item) => {
-    const { id } = item
-    if (!acc[id]) {
-      acc[id] = item
-    }
-    return acc
-  }, {})
 
 interface NotificationsProviderProps {
   children: any
