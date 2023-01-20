@@ -8,4 +8,8 @@ export const SideBarWrapper: any = styled.div`
   overflow: scroll;
   padding: 16px;
   border-right: 2px solid rgba(241, 238, 238, 0.098);
+
+  a {
+    color: #fff;
+  }
 `

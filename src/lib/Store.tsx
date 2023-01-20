@@ -29,7 +29,12 @@ export const useStore = (
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => setMessages((messages) => [...messages, payload.new])
+        (payload) => {
+          console.log('new message payload: ', payload)
+          // setMessages((messages) => [...messages, payload.new])
+          // setMessages((messages) => [...messages, payload.new])
+          handleNewMessage(payload.new)
+        }
       )
       .on(
         'postgres_changes',
@@ -84,20 +89,25 @@ export const useStore = (
   }, [channelId])
 
   // // New message received from Postgres
-  // useEffect(() => {
-  //   if (newMessage && newMessage.channel_id === Number(channelId)) {
-  //     const handleAsync = async () => {
-  //       let authorId = newMessageuser_id
-  //       if (!users.get(authorId))
-  //         await fetchUser(authorId, (user: SetStateAction<null>) =>
-  //           handleNewOrUpdatedUser(user)
-  //         )
-  //       setMessages(messages.concat(newMessage))
-  //     }
-  //     handleAsync()
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [newMessage])
+  useEffect(() => {
+    if (newMessage) {
+      console.log('newMessage: ', newMessage)
+      const handleAsync = async () => {
+        const userId = newMessage.user_id
+        const from = await fetchUser({ userId })
+        console.log('from: ', from)
+        setMessages((messages) => [
+          ...messages,
+          {
+            ...newMessage,
+            from,
+          },
+        ])
+      }
+      handleAsync()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newMessage, channelId])
 
   // Deleted message received from postgres
   useEffect(() => {
@@ -214,7 +224,7 @@ export const updateUserOnlineStatus = async (userId) => {
 export const fetchUser = async ({ userId = null }: any) => {
   let { data } = await supabase
     .from('users')
-    .select(`*, book_clubs(*, schedule(*))`)
+    .select(`*, book_clubs(*, schedule(*), channel(*))`)
     .eq('id', userId)
 
   const [user] = data || [null]

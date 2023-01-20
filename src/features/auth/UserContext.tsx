@@ -60,6 +60,9 @@ export const UserContextProvider: FunctionComponent<
         if (!session) {
           router.push('/')
         }
+        if (event === 'SIGNED_IN') {
+          router.push(`/profile/${session?.user?.id}`)
+        }
         if (event === 'SIGNED_OUT') {
           router.push('/')
         }

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 export const MainWrapper: any = styled.div`
   width: calc(100% - ${SIDEBAR_WIDTH});
-  height: 100vh;
-  overflow: scroll;
+  /* height: calc(100vh - 76px); */
+  /* overflow: scroll; */
   padding: 16px;
 `

@@ -1,13 +1,16 @@
-import { MessageInputWrapper, MessagesWrapper } from '@/components/BookClubChannel/Messages/Messages.style';
+import {
+  MessageForm,
+  MessageInputWrapper,
+  MessageList,
+  MessagesWrapper,
+} from '@/components/BookClubChannel/Messages/Messages.style';
 import UserContext from '@/features/auth/UserContext';
 import { addMessage, useStore } from '@/lib/Store';
 import { ClockCircleOutlined } from '@ant-design/icons';
-import { Avatar } from '@nextui-org/react';
-import { Button, Form, Input, Layout, List, Space } from 'antd';
+import { Avatar, Button } from '@nextui-org/react';
+import { Input, Space } from 'antd';
 import { useRouter } from 'next/router';
-import { useContext, useEffect, useRef } from 'react';
-
-const { Header, Footer, Sider, Content } = Layout
+import { useContext, useEffect, useRef, useState } from 'react';
 
 const IconText = ({ children, text }: { icon: any; text: string }) => (
   <Space>
@@ -18,9 +21,10 @@ const IconText = ({ children, text }: { icon: any; text: string }) => (
 
 const ChannelsPage = (props) => {
   const router = useRouter()
-  console.log('router: ', router)
-  const [form] = Form.useForm()
+
+  const [form] = MessageForm.useForm()
   const { currentUser } = useContext(UserContext)
+  const [channelMessages, setChannelMessages] = useState([])
 
   const messagesEndRef = useRef(null)
 
@@ -29,11 +33,10 @@ const ChannelsPage = (props) => {
   const { messages, channels } = useStore({ channelId })
 
   const onValuesChange = (changedValues) => {
-    // console.log('changedValues: ', changedValues)
+    //
   }
 
   const onFinish = async ({ message }) => {
-    console.log('message: ', message)
     await addMessage({
       message,
       user_id: currentUser?.id,
@@ -41,14 +44,16 @@ const ChannelsPage = (props) => {
     })
     form.resetFields()
   }
-  console.log('messages: ', messages)
 
   useEffect(() => {
-    messagesEndRef?.current?.scrollIntoView({
-      block: 'start',
-      behavior: 'smooth',
-    })
+    if (messages?.length) {
+      setChannelMessages(messages)
+    }
   }, [messages])
+
+  useEffect(() => {
+    messagesEndRef?.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messagesEndRef])
 
   // redirect to public channel when current channel is deleted
   // useEffect(() => {
@@ -64,14 +69,15 @@ const ChannelsPage = (props) => {
     //   <Content>
     <>
       <MessagesWrapper>
-        <List
-          className='demo-loadmore-list'
+        <MessageList
           // loading={initLoading}
           itemLayout='vertical'
           // loadMore={loadMore}
-          dataSource={messages}
-          renderItem={(item) => (
-            <List.Item
+          dataSource={channelMessages}
+          renderItem={(item, index) => (
+            <MessageList.Item
+              key={index}
+              ref={index === channelMessages.length - 1 ? messagesEndRef : null}
               actions={[
                 <a key='list-loadmore-edit'>respond</a>,
                 <a key='list-loadmore-more'>Like</a>,
@@ -81,36 +87,32 @@ const ChannelsPage = (props) => {
                 </IconText>,
               ]}
             >
-              <List.Item.Meta
+              <MessageList.Item.Meta
                 avatar={<Avatar src={item.from?.avatar_url} />}
-                title={
-                  <a href='https://ant.design'>
-                    {item.from.name || item.from.email}
-                  </a>
-                }
-                description={item.message}
+                title={item.message}
+                description={item.from.name || item.from.email}
               />
-            </List.Item>
+            </MessageList.Item>
           )}
         />
+        <MessageInputWrapper>
+          <MessageForm
+            layout={'inline'}
+            form={form}
+            onValuesChange={onValuesChange}
+            onFinish={onFinish}
+          >
+            <MessageForm.Item name='message' style={{ width: '95%' }}>
+              <Input placeholder='Type something' />
+            </MessageForm.Item>
+            <MessageForm.Item>
+              <Button shadow color='gradient' auto htmlType='submit'>
+                Send
+              </Button>
+            </MessageForm.Item>
+          </MessageForm>
+        </MessageInputWrapper>
       </MessagesWrapper>
-      <MessageInputWrapper>
-        <Form
-          layout={'inline'}
-          form={form}
-          onValuesChange={onValuesChange}
-          onFinish={onFinish}
-        >
-          <Form.Item name='message' style={{ width: '95%' }}>
-            <Input placeholder='Type something' />
-          </Form.Item>
-          <Form.Item>
-            <Button htmlType='submit' type='primary'>
-              Send
-            </Button>
-          </Form.Item>
-        </Form>
-      </MessageInputWrapper>
     </>
     //   </Content>
     //   <Sider></Sider>

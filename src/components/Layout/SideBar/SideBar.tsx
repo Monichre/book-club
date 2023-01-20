@@ -2,6 +2,7 @@ import UserContext from '@/features/auth/UserContext';
 import { useStore } from '@/lib/Store';
 import { Avatar, Button, Collapse, Grid, Text } from '@nextui-org/react';
 import { useUser } from '@supabase/auth-helpers-react';
+import { Space } from 'antd';
 import Link from 'next/link';
 import * as React from 'react';
 import { useContext, useEffect } from 'react';
@@ -16,7 +17,7 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
   const user = useUser()
   const { currentUser } = useContext(UserContext)
 
-  const [userChannels, setUserChannels] = React.useState([])
+  const [bookClubsWithChannel, setbookClubsWithChannel] = React.useState([])
 
   const bookClubs = currentUser?.book_clubs
   // getTotalBookClubMembers
@@ -27,18 +28,19 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
 
   useEffect(() => {
     if (channels?.length && bookClubs?.length) {
-      const channelsWithBookClubData = channels.map((channel) => {
-        const bookClub = bookClubs.find(
-          (bookClub) => bookClub.id === channel.book_club_id
+      console.log('channels: ', channels)
+      const enriched = bookClubs.map((bookClub) => {
+        console.log('bookClub: ', bookClub)
+        const channel = channels.find(
+          (channel) => bookClub.id === channel.book_club_id
         )
         return {
-          ...channel,
-          bookClub,
+          ...bookClub,
+          channel,
         }
       })
-      console.log('channelsWithBookClubData: ', channelsWithBookClubData)
-
-      setUserChannels(channelsWithBookClubData)
+      console.log('enriched: ', enriched)
+      setbookClubsWithChannel(enriched)
     }
   }, [channels, bookClubs])
 
@@ -46,44 +48,16 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
     <SideBarWrapper>
       <Grid.Container gap={2}>
         <Grid>
-          <Text h2>Chats</Text>
-          <Collapse.Group shadow>
-            {userChannels.map((channel) => {
-              const link = `/book-clubs/${channel.bookClub.id}/channels/${channel.id}`
-              console.log('link: ', link)
-              return (
-                <Collapse
-                  title={<Text h4>{channel.name}</Text>}
-                  // subtitle='4 unread messages'
-                  contentLeft={
-                    <Avatar
-                      size='lg'
-                      src={channel.bookClub.image_url}
-                      color='secondary'
-                      bordered
-                      squared
-                    />
-                  }
-                >
-                  <Button shadow color='gradient' auto>
-                    <Link
-                      href={{
-                        pathname: link,
-                      }}
-                    >
-                      {channel.name}
-                    </Link>
-                  </Button>
-                </Collapse>
-              )
-            })}
-          </Collapse.Group>
-        </Grid>
-        <Grid>
           <Text h2>Book Clubs</Text>
           <Collapse.Group>
-            {bookClubs
-              ? bookClubs.map((bookClub) => {
+            {bookClubsWithChannel?.length
+              ? bookClubsWithChannel.map((bookClub) => {
+                  const { channel } = bookClub
+                  console.log('channel: ', channel)
+                  const bookClubLink = `/book-clubs/${bookClub.id}`
+                  const channelLink = channel
+                    ? `${bookClubLink}/channels/${channel.id}`
+                    : null
                   return (
                     <Collapse
                       title={<Text h4>{bookClub?.name}</Text>}
@@ -98,13 +72,26 @@ export const SideBar: React.FunctionComponent<SideBarProps> = (
                         />
                       }
                     >
-                      <Text>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua. Ut enim ad minim veniam, quis nostrud
-                        exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat.
-                      </Text>
+                      <Space>
+                        <Button shadow color='gradient' auto>
+                          <Link
+                            href={{
+                              pathname: bookClubLink,
+                            }}
+                          >
+                            Home
+                          </Link>
+                        </Button>
+                        <Button shadow color='gradient' auto>
+                          <Link
+                            href={{
+                              pathname: channelLink,
+                            }}
+                          >
+                            Chat
+                          </Link>
+                        </Button>
+                      </Space>
                     </Collapse>
                   )
                 })
